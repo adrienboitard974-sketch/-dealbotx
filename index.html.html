@@ -1,0 +1,1411 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dealbotx — Hunt Smart. Flip Better.</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Outfit:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f8f6f4;--s1:#fff;--s2:#f2efec;--s3:#ebe7e2;
+  --border:#e0dbd4;--border2:#cdc7be;
+  --red:#b01030;--red2:#d4143a;--red3:#cc0f2e;
+  --gold:#c4924a;--gold2:#b07830;
+  --ink:#1a1614;--muted:#9a9088;--muted2:#6a6058;
+  --green:#1a8a44;--green-dim:rgba(26,138,68,.08);--green-border:rgba(26,138,68,.2);
+  --orange:#c07020;--orange-dim:rgba(192,112,32,.08);
+  --red-dim:rgba(176,16,48,.07);--red-border:rgba(176,16,48,.2);
+  --shadow:0 2px 16px rgba(0,0,0,.08);--shadow-lg:0 8px 40px rgba(0,0,0,.14);
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--ink);font-family:'Outfit',sans-serif;font-size:14px;line-height:1.6;overflow-x:hidden}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--red);border-radius:2px}
+
+/* DARK */
+body.dark{--bg:#07050a;--s1:#0d0a12;--s2:#13101a;--s3:#1a1624;--border:#1e1a2a;--border2:#2a2438;--ink:#f0ecf8;--muted:#5a5070;--muted2:#8a7a9a;--green:#20c060;--green-dim:rgba(32,192,96,.08);--green-border:rgba(32,192,96,.2);--red-dim:rgba(176,16,48,.1)}
+body.dark nav{background:rgba(7,5,10,.92)}
+body.dark .nav-search input{color:#f0ecf8}
+body.dark .leaflet-container{filter:invert(1) hue-rotate(180deg)}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:300;background:rgba(248,246,244,.94);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);height:60px;display:flex;align-items:center;padding:0 24px;gap:12px}
+nav::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--red),transparent);opacity:.4}
+.nav-logo{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;letter-spacing:-.5px;cursor:pointer;flex-shrink:0}
+.logo-x{color:var(--red3)}
+.nav-search{flex:1;max-width:340px;position:relative}
+.nav-search input{width:100%;background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:8px 14px 8px 34px;font-family:'Outfit',sans-serif;font-size:13px;color:var(--ink);outline:none;transition:border-color .2s}
+.nav-search input:focus{border-color:var(--red);background:var(--s1)}
+.nav-search input::placeholder{color:var(--muted)}
+.ns-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--muted);pointer-events:none}
+.nav-right{display:flex;align-items:center;gap:10px;margin-left:auto;flex-shrink:0}
+.nav-link{font-size:12px;font-weight:500;color:var(--muted2);cursor:pointer;white-space:nowrap}
+.nav-link:hover{color:var(--ink)}
+.nav-icon-btn{width:32px;height:32px;border-radius:50%;background:var(--s2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;transition:all .2s}
+.nav-icon-btn:hover{border-color:var(--border2)}
+.nav-cta{background:var(--red);color:white;padding:7px 16px;border-radius:6px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;border:none;white-space:nowrap;transition:all .2s}
+.nav-cta:hover{background:var(--red2);transform:translateY(-1px)}
+.nav-user{background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:7px 14px;font-size:12px;font-weight:600;color:var(--ink);cursor:pointer;white-space:nowrap}
+
+/* SEARCH DROPDOWN */
+.search-dd{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--s1);border:1px solid var(--border2);border-radius:8px;box-shadow:var(--shadow-lg);z-index:400;overflow:hidden;display:none}
+.search-dd.open{display:block}
+.sd-item{display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .1s}
+.sd-item:last-child{border-bottom:none}
+.sd-item:hover{background:var(--s2)}
+.sd-icon{font-size:1.3rem;width:26px;text-align:center}
+.sd-title{font-size:13px;font-weight:600;color:var(--ink)}
+.sd-meta{font-size:10px;color:var(--muted2)}
+.sd-prix{font-family:'DM Mono',monospace;font-size:12px;color:var(--ink);margin-left:auto}
+
+/* MOBILE NAV */
+.mobile-filter-btn{display:none;background:var(--red);color:white;border:none;border-radius:6px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer}
+
+/* LOGIN MODAL */
+.login-overlay{position:fixed;inset:0;background:rgba(248,246,244,.92);backdrop-filter:blur(14px);z-index:600;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .25s}
+.login-overlay.open{opacity:1;pointer-events:all}
+.login-box{background:var(--s1);border:1px solid var(--border2);border-radius:14px;width:100%;max-width:420px;padding:36px;position:relative;transform:translateY(20px);transition:transform .25s}
+.login-overlay.open .login-box{transform:translateY(0)}
+.lb-close{position:absolute;top:14px;right:14px;width:28px;height:28px;background:var(--s2);border:1px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;color:var(--muted2)}
+.lb-logo{font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;margin-bottom:6px;text-align:center}
+.lb-sub{font-size:12px;color:var(--muted2);text-align:center;margin-bottom:28px}
+.lb-tabs{display:flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:24px}
+.lb-tab{flex:1;padding:9px;text-align:center;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--muted2);cursor:pointer;transition:all .15s}
+.lb-tab.on{background:var(--red);color:white}
+.lb-field{margin-bottom:14px}
+.lb-field label{font-size:11px;font-weight:600;color:var(--muted2);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px}
+.lb-field input{width:100%;background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:10px 14px;font-family:'Outfit',sans-serif;font-size:13px;color:var(--ink);outline:none;transition:border-color .2s}
+.lb-field input:focus{border-color:var(--red)}
+.lb-btn{width:100%;background:var(--red);color:white;border:none;border-radius:8px;padding:13px;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:8px;transition:background .2s}
+.lb-btn:hover{background:var(--red2)}
+.lb-divider{display:flex;align-items:center;gap:12px;margin:16px 0;font-size:11px;color:var(--muted)}
+.lb-divider::before,.lb-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* HERO */
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:110px 24px 80px;position:relative;overflow:hidden;text-align:center}
+.hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse 70% 50% at 50% 0%,rgba(176,16,48,.07),transparent 60%),radial-gradient(ellipse 40% 30% at 80% 80%,rgba(196,146,74,.04),transparent);pointer-events:none}
+.hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(200,190,180,.22) 1px,transparent 1px),linear-gradient(90deg,rgba(200,190,180,.22) 1px,transparent 1px);background-size:60px 60px;mask-image:radial-gradient(ellipse at center,black,transparent 70%);pointer-events:none}
+.hero-kicker{display:inline-flex;align-items:center;gap:8px;background:var(--red-dim);border:1px solid var(--red-border);border-radius:100px;padding:6px 16px;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--red3);margin-bottom:24px;animation:fadeDown .6s ease both}
+.kicker-dot{width:6px;height:6px;border-radius:50%;background:var(--red3);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+.hero h1{font-family:'Syne',sans-serif;font-size:clamp(3rem,8vw,6rem);font-weight:800;line-height:.95;letter-spacing:-2px;margin-bottom:20px;animation:fadeDown .7s ease .1s both}
+.hero h1 .r{color:var(--red)}
+.hero h1 .o{-webkit-text-stroke:1.5px rgba(26,22,20,.2);color:transparent}
+.hero-sub{font-size:clamp(14px,2vw,17px);font-weight:300;color:var(--muted2);max-width:500px;margin:0 auto 36px;line-height:1.7;animation:fadeDown .8s ease .2s both}
+.hero-sub strong{color:var(--ink);font-weight:500}
+.hero-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:56px;animation:fadeDown .9s ease .3s both}
+.btn-p{background:var(--red);color:white;border:none;border-radius:8px;padding:13px 28px;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;box-shadow:0 0 24px rgba(176,16,48,.18)}
+.btn-p:hover{background:var(--red2);transform:translateY(-2px)}
+.btn-s{background:transparent;color:var(--muted2);border:1px solid var(--border2);border-radius:8px;padding:13px 24px;font-size:14px;font-weight:500;cursor:pointer;transition:all .2s}
+.btn-s:hover{border-color:var(--muted);color:var(--ink)}
+.hero-stats{display:flex;gap:44px;justify-content:center;animation:fadeDown 1s ease .4s both}
+.hstat{text-align:center}
+.hstat-val{font-family:'DM Mono',monospace;font-size:1.9rem;font-weight:500;display:block;line-height:1;margin-bottom:4px;letter-spacing:-1px}
+.hstat-val.r{color:var(--red)}
+.hstat-val.g{color:var(--gold2)}
+.hstat-val.gr{color:var(--green)}
+.hstat-label{font-size:11px;color:var(--muted)}
+@keyframes fadeDown{from{opacity:0;transform:translateY(-18px)}to{opacity:1;transform:translateY(0)}}
+
+/* COMMENT ÇA MARCHE */
+.how-section{max-width:1060px;margin:0 auto;padding:80px 24px}
+.how-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-top:36px}
+.how-card{background:var(--s1);border:1px solid var(--border);border-radius:10px;padding:24px;position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s}
+.how-card:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
+.how-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--red),var(--gold))}
+.how-num{font-family:'DM Mono',monospace;font-size:2rem;font-weight:500;color:var(--red-border);display:block;margin-bottom:8px}
+.how-icon{font-size:1.6rem;margin-bottom:10px;display:block}
+.how-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:6px}
+.how-desc{font-size:12px;color:var(--muted2);font-weight:300;line-height:1.55}
+
+/* SECTION HEADERS */
+.sec-tag{display:inline-flex;align-items:center;gap:8px;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--red2);margin-bottom:12px}
+.sec-tag::before{content:'';width:18px;height:1px;background:var(--red2)}
+.sec-title{font-family:'Syne',sans-serif;font-size:clamp(1.5rem,3vw,2.2rem);font-weight:800;letter-spacing:-1px;margin-bottom:8px;line-height:1.1}
+.sec-sub{font-size:14px;font-weight:300;color:var(--muted2);max-width:480px;line-height:1.7;margin-bottom:28px}
+
+/* DEALS DU JOUR */
+.deals-jour{max-width:1060px;margin:0 auto;padding:0 24px 60px}
+.dj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.dj-card{background:var(--s1);border:1px solid var(--border);border-radius:10px;padding:16px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.dj-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg);border-color:var(--border2)}
+.dj-card.top{border-color:rgba(176,16,48,.28)}
+.dj-card.top::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--red),var(--gold))}
+.dj-score{position:absolute;top:12px;right:12px;background:var(--ink);color:white;font-family:'DM Mono',monospace;font-size:11px;font-weight:500;padding:2px 8px;border-radius:4px}
+.dj-score.hot{background:var(--red)}
+.dj-score.good{background:var(--green)}
+.dj-icon{font-size:1.8rem;margin-bottom:10px;display:block}
+.dj-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--ink);margin-bottom:3px;line-height:1.2;padding-right:40px}
+.dj-meta{font-size:10px;color:var(--muted2);margin-bottom:10px;font-weight:300}
+.dj-prix{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.dj-achat{font-family:'DM Mono',monospace;font-size:1rem;font-weight:500;color:var(--ink)}
+.dj-arr{color:var(--muted);font-size:11px}
+.dj-revente{font-family:'DM Mono',monospace;font-size:1rem;font-weight:500;color:var(--green)}
+.dj-gain{font-size:10px;font-weight:600;padding:2px 7px;border-radius:3px;background:var(--green-dim);color:var(--green);border:1px solid var(--green-border)}
+
+/* ALERTE */
+.alerte-wrap{max-width:1060px;margin:0 auto;padding:0 24px 60px}
+.alerte-box{background:var(--s1);border:1px solid var(--border);border-left:3px solid var(--red);border-radius:0 10px 10px 0;padding:20px 24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.alerte-ico{font-size:1.6rem;flex-shrink:0}
+.alerte-txt{flex:1;min-width:160px}
+.alerte-txt h4{font-family:'Syne',sans-serif;font-weight:700;font-size:14px;margin-bottom:2px}
+.alerte-txt p{font-size:11px;color:var(--muted2);font-weight:300}
+.alerte-form{display:flex;gap:7px;flex-wrap:wrap}
+.alerte-input{background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:8px 12px;font-family:'Outfit',sans-serif;font-size:12px;color:var(--ink);outline:none;width:140px;transition:border-color .2s}
+.alerte-input:focus{border-color:var(--red)}
+.alerte-input::placeholder{color:var(--muted)}
+.alerte-sel{background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:8px 12px;font-family:'Outfit',sans-serif;font-size:12px;color:var(--ink);outline:none;cursor:pointer}
+.alerte-btn{background:var(--red);color:white;border:none;border-radius:6px;padding:8px 16px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;transition:background .2s}
+.alerte-btn:hover{background:var(--red2)}
+
+/* MARKETPLACE */
+.mkt-wrap{max-width:1060px;margin:0 auto;padding:0 24px 60px}
+.marge-pills{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px}
+.mpill{display:flex;align-items:center;gap:7px;background:var(--s1);border:1px solid var(--border);border-radius:7px;padding:9px 14px;cursor:pointer;transition:all .2s;user-select:none}
+.mpill:hover{border-color:var(--border2)}
+.mpill.active{background:var(--red-dim);border-color:var(--red-border)}
+.mpill-icon{font-size:.95rem}
+.mpill-label{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--ink)}
+.mpill-count{font-size:10px;color:var(--muted2)}
+.mpill-badge{font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px}
+.mpill-badge.hot{background:var(--red-dim);color:var(--red3);border:1px solid var(--red-border)}
+.mpill-badge.ok{background:var(--green-dim);color:var(--green);border:1px solid var(--green-border)}
+.mpill-badge.low{background:var(--orange-dim);color:var(--orange);border:1px solid rgba(192,112,32,.2)}
+.delivery-bar{display:flex;gap:7px;margin-bottom:12px;flex-wrap:wrap}
+.dtog{display:flex;align-items:center;gap:5px;background:var(--s1);border:1px solid var(--border);border-radius:100px;padding:5px 12px;font-size:11px;font-weight:600;color:var(--muted2);cursor:pointer;transition:all .15s;user-select:none}
+.dtog:hover{border-color:var(--border2);color:var(--ink)}
+.dtog.on{background:var(--green-dim);border-color:var(--green-border);color:var(--green)}
+.compare-bar{background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.cmp-label{font-size:11px;font-weight:600;color:var(--muted2);flex-shrink:0}
+.cmp-slots{display:flex;gap:7px;flex-wrap:wrap;flex:1}
+.cmp-slot{background:var(--s2);border:1px dashed var(--border2);border-radius:5px;padding:5px 11px;font-size:11px;color:var(--muted)}
+.cmp-slot.filled{border-style:solid;border-color:var(--red-border);background:var(--red-dim);color:var(--ink);display:flex;align-items:center;gap:6px}
+.cmp-rm{cursor:pointer;color:var(--muted);font-size:11px}
+.cmp-rm:hover{color:var(--red)}
+.btn-cmp{background:var(--red);color:white;border:none;border-radius:5px;padding:6px 14px;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;transition:background .15s}
+.btn-cmp:hover{background:var(--red2)}
+.btn-cmp:disabled{background:var(--muted);cursor:not-allowed}
+
+/* MARKET LAYOUT */
+.mkt-layout{display:grid;grid-template-columns:200px 1fr;gap:14px}
+.filter-panel{background:var(--s1);border:1px solid var(--border);border-radius:10px;padding:18px;height:fit-content;position:sticky;top:72px;max-height:calc(100vh - 90px);overflow-y:auto}
+.filter-panel::-webkit-scrollbar{width:3px}
+.fp-sec{margin-bottom:20px}
+.fp-sec:last-child{margin-bottom:0}
+.fp-ttl{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:9px}
+.slider-wrap{background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:11px}
+.slider-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--muted2);margin-bottom:7px}
+.slider-val{color:var(--gold2);font-family:'DM Mono',monospace;font-weight:500}
+input[type=range]{width:100%;-webkit-appearance:none;height:3px;border-radius:2px;background:linear-gradient(90deg,var(--red),var(--gold));outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:white;border:2px solid var(--red);box-shadow:0 0 6px rgba(176,16,48,.35);cursor:pointer}
+.ci{display:flex;align-items:center;gap:7px;padding:6px 0;border-bottom:1px solid var(--border);cursor:pointer}
+.ci:last-child{border-bottom:none}
+.ci:hover{opacity:.8}
+.cb{width:15px;height:15px;border-radius:3px;border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:9px;flex-shrink:0;transition:all .15s}
+.cb.on{background:var(--red);border-color:var(--red);color:white}
+.ci-lbl{font-size:12px;color:var(--muted2);flex:1}
+.ci-cnt{font-size:10px;color:var(--muted)}
+.dyn-sec{margin-top:7px;border:1px solid var(--border);border-radius:7px;overflow:hidden;animation:slideDown .2s ease}
+@keyframes slideDown{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
+.dyn-hdr{background:var(--s3);padding:7px 11px;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:5px}
+.dyn-hdr::before{content:'';width:3px;height:10px;border-radius:2px;background:var(--red);flex-shrink:0}
+.dyn-opts{padding:7px 11px;display:flex;flex-wrap:wrap;gap:5px}
+.dyn-opt{background:var(--s2);border:1px solid var(--border);border-radius:100px;padding:3px 9px;font-size:10px;font-weight:500;color:var(--muted2);cursor:pointer;transition:all .15s;user-select:none}
+.dyn-opt:hover{border-color:var(--border2);color:var(--ink)}
+.dyn-opt.on{background:var(--red-dim);border-color:var(--red-border);color:var(--red);font-weight:600}
+
+/* ANNONCES */
+.annonces-area{display:flex;flex-direction:column;gap:7px}
+.sort-bar{display:flex;align-items:center;justify-content:space-between;background:var(--s1);border:1px solid var(--border);border-radius:7px;padding:9px 13px;margin-bottom:3px}
+.sort-info{font-size:12px;color:var(--muted2)}
+.sort-info strong{color:var(--ink);font-weight:600;font-family:'Syne',sans-serif}
+.sort-btns{display:flex;gap:5px}
+.sbtn{background:var(--s2);border:1px solid var(--border);border-radius:4px;padding:4px 11px;font-size:11px;font-weight:500;color:var(--muted2);cursor:pointer;transition:all .15s}
+.sbtn:hover{border-color:var(--border2);color:var(--ink)}
+.sbtn.on{background:var(--red-dim);border-color:var(--red-border);color:var(--red3)}
+
+/* ANNONCE CARD */
+.ann{background:var(--s1);border:1px solid var(--border);border-radius:9px;overflow:hidden;display:grid;grid-template-columns:100px 1fr auto;cursor:pointer;transition:all .2s;position:relative}
+.ann::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:transparent;transition:background .2s}
+.ann:hover{border-color:var(--border2);transform:translateY(-1px);box-shadow:var(--shadow)}
+.ann:hover::before,.ann.featured::before{background:var(--red)}
+.ann.featured{border-color:rgba(176,16,48,.28)}
+.ann-img{background:var(--s2);display:flex;align-items:center;justify-content:center;font-size:2.5rem;border-right:1px solid var(--border);position:relative}
+.score-badge{position:absolute;bottom:5px;right:5px;background:var(--ink);color:white;font-family:'DM Mono',monospace;font-size:9px;font-weight:500;padding:2px 6px;border-radius:3px}
+.score-badge.hot{background:var(--red)}
+.score-badge.good{background:var(--green)}
+.trust-badge{position:absolute;top:5px;right:5px;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px}
+.trust-badge.ok{background:var(--green-dim);border:1px solid var(--green-border);color:var(--green)}
+.trust-badge.warn{background:var(--orange-dim);border:1px solid rgba(192,112,32,.2);color:var(--orange)}
+.sold-ov{position:absolute;inset:0;background:rgba(248,246,244,.82);display:flex;align-items:center;justify-content:center}
+.sold-tag{background:var(--s2);border:1px solid var(--border2);color:var(--muted2);font-family:'Syne',sans-serif;font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:3px 9px;border-radius:2px}
+.ann-body{padding:11px 13px;display:flex;flex-direction:column;justify-content:space-between}
+.ann-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--ink);margin-bottom:2px;letter-spacing:-.2px}
+.ann-desc{font-size:11px;font-weight:300;color:var(--muted2);line-height:1.4;margin-bottom:7px}
+.ann-footer{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.ann-tags{display:flex;gap:3px;flex-wrap:wrap}
+.atag{background:var(--s2);border:1px solid var(--border);border-radius:3px;padding:2px 6px;font-size:9px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;color:var(--muted2)}
+.atag.ok{color:var(--green);border-color:var(--green-border);background:var(--green-dim)}
+.atag.warn{color:var(--orange);border-color:rgba(192,112,32,.2);background:var(--orange-dim)}
+.btn-add-cmp{background:transparent;border:1px solid var(--border);border-radius:4px;padding:3px 8px;font-size:10px;color:var(--muted2);cursor:pointer;white-space:nowrap;transition:all .15s;flex-shrink:0}
+.btn-add-cmp:hover{border-color:var(--red-border);color:var(--red)}
+.marge-block{padding:11px 12px;display:flex;flex-direction:column;justify-content:space-between;align-items:flex-end;border-left:1px solid var(--border);min-width:120px;gap:3px}
+.mb-al{font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);display:block;text-align:right;margin-bottom:1px}
+.mb-ap{font-family:'DM Mono',monospace;font-size:1.2rem;font-weight:500;color:var(--ink);line-height:1;display:block;text-align:right;letter-spacing:-.5px}
+.mb-ap.sold{color:var(--muted)}
+.mb-arrow{font-size:10px;color:var(--muted);text-align:right;display:block}
+.mb-rl{font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);display:block;text-align:right;margin-bottom:1px}
+.mb-rp{font-family:'DM Mono',monospace;font-size:.95rem;font-weight:500;color:var(--green);display:block;text-align:right;letter-spacing:-.3px}
+.mb-rp.sold{color:var(--muted)}
+.mb-bot{display:flex;align-items:center;gap:4px;justify-content:flex-end;margin-top:3px}
+.mb-coeff{font-family:'DM Mono',monospace;font-size:10px;font-weight:500;padding:2px 7px;border-radius:3px}
+.mb-coeff.hot{color:var(--red3);background:var(--red-dim);border:1px solid var(--red-border)}
+.mb-coeff.good{color:var(--green);background:var(--green-dim);border:1px solid var(--green-border)}
+.mb-coeff.ok{color:var(--orange);background:var(--orange-dim);border:1px solid rgba(192,112,32,.2)}
+.mb-coeff.sold{color:var(--muted);background:var(--s3);border:1px solid var(--border)}
+.mb-gain{font-size:9px;font-weight:600;padding:2px 7px;border-radius:3px}
+.mb-gain.hot{background:var(--red-dim);color:var(--red3);border:1px solid var(--red-border)}
+.mb-gain.good{background:var(--green-dim);color:var(--green);border:1px solid var(--green-border)}
+.mb-gain.sold{background:var(--s3);color:var(--muted);border:1px solid var(--border)}
+
+/* TIMER COUNTDOWN */
+.ann-timer{font-family:'DM Mono',monospace;font-size:9px;color:var(--muted2);display:flex;align-items:center;gap:4px;margin-top:4px}
+.timer-dot{width:5px;height:5px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+
+/* HISTORIQUE */
+.histo-section{max-width:1060px;margin:0 auto;padding:0 24px 60px}
+.histo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:9px}
+.hc{background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:13px;opacity:.75;transition:opacity .2s}
+.hc:hover{opacity:1}
+.hc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.hc-icon{font-size:1.3rem}
+.hc-sold{background:var(--s3);color:var(--muted);font-family:'Syne',sans-serif;font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:2px 7px;border-radius:2px}
+.hc-title{font-size:12px;font-weight:600;color:var(--ink);margin-bottom:5px}
+.hc-prix{display:flex;align-items:center;gap:7px}
+.hc-a{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);text-decoration:line-through}
+.hc-r{font-family:'DM Mono',monospace;font-size:12px;font-weight:500;color:var(--ink)}
+.hc-g{font-size:10px;font-weight:600;padding:2px 6px;border-radius:3px;background:var(--green-dim);color:var(--green);border:1px solid var(--green-border);margin-left:auto}
+.hc-time{font-size:9px;color:var(--muted);margin-top:5px;font-weight:300}
+
+/* CARTE */
+.map-section{max-width:1060px;margin:0 auto;padding:0 24px 60px}
+.map-container{background:var(--s1);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.map-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.map-header h3{font-family:'Syne',sans-serif;font-size:14px;font-weight:700}
+.map-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.map-input{background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:7px 12px;font-family:'Outfit',sans-serif;font-size:12px;color:var(--ink);outline:none;width:160px}
+.map-input:focus{border-color:var(--red)}
+.map-range-wrap{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted2)}
+.map-range-val{font-family:'DM Mono',monospace;font-weight:500;color:var(--ink)}
+#leafletMap{height:320px;width:100%;z-index:1}
+.map-legend{padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:16px;flex-wrap:wrap}
+.map-leg-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted2)}
+.map-leg-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+
+/* GRAPHIQUE PRIX */
+.chart-section{max-width:1060px;margin:0 auto;padding:0 24px 60px}
+.chart-box{background:var(--s1);border:1px solid var(--border);border-radius:10px;padding:20px}
+.chart-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px}
+.chart-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700}
+.chart-tabs{display:flex;gap:5px}
+.chart-tab{background:var(--s2);border:1px solid var(--border);border-radius:5px;padding:5px 12px;font-size:11px;font-weight:600;color:var(--muted2);cursor:pointer;transition:all .15s}
+.chart-tab.on{background:var(--red-dim);border-color:var(--red-border);color:var(--red)}
+#priceChart{width:100%;height:160px}
+
+/* SCORE GLOBAL */
+.score-ring{position:relative;width:70px;height:70px;flex-shrink:0}
+.score-ring svg{transform:rotate(-90deg)}
+.score-ring .score-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:18px;font-weight:500}
+
+/* FAQ */
+.faq-section{max-width:1060px;margin:0 auto;padding:0 24px 60px}
+.faq-list{display:flex;flex-direction:column;gap:8px}
+.faq-item{background:var(--s1);border:1px solid var(--border);border-radius:8px;overflow:hidden;transition:border-color .2s}
+.faq-item:hover{border-color:var(--border2)}
+.faq-q{padding:16px 20px;font-weight:600;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.faq-q::after{content:'+';font-size:18px;color:var(--muted);flex-shrink:0;transition:transform .2s}
+.faq-item.open .faq-q::after{transform:rotate(45deg)}
+.faq-a{max-height:0;overflow:hidden;transition:max-height .3s ease,padding .3s ease;font-size:13px;color:var(--muted2);font-weight:300;line-height:1.6;padding:0 20px}
+.faq-item.open .faq-a{max-height:200px;padding:0 20px 16px}
+
+/* AFFILIATION */
+.affil-section{max-width:1060px;margin:0 auto;padding:0 24px 60px}
+.affil-box{background:linear-gradient(135deg,var(--s1),var(--s2));border:1px solid var(--border);border-radius:10px;padding:28px;display:grid;grid-template-columns:1fr auto;gap:20px;align-items:center}
+.affil-title{font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:800;margin-bottom:8px;letter-spacing:-.3px}
+.affil-desc{font-size:13px;color:var(--muted2);font-weight:300;max-width:400px;line-height:1.6}
+.affil-link{display:flex;gap:8px;margin-top:14px}
+.affil-input{background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:9px 14px;font-family:'DM Mono',monospace;font-size:12px;color:var(--muted2);flex:1;outline:none}
+.affil-copy{background:var(--red);color:white;border:none;border-radius:6px;padding:9px 16px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
+.affil-stats{display:flex;flex-direction:column;gap:10px;text-align:center}
+.affil-stat-val{font-family:'DM Mono',monospace;font-size:1.8rem;font-weight:500;color:var(--red);display:block}
+.affil-stat-lbl{font-size:10px;color:var(--muted)}
+
+/* FORFAITS */
+.forfaits-section{max-width:1060px;margin:0 auto;padding:0 24px 60px}
+.forfaits-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
+.forfait{background:var(--s1);border:1px solid var(--border);border-radius:11px;padding:22px;position:relative;overflow:hidden;transition:transform .2s,border-color .2s}
+.forfait:hover{transform:translateY(-3px);border-color:var(--border2)}
+.forfait.star{border-color:rgba(176,16,48,.32)}
+.forfait.star::before{content:'BEST SELLER';position:absolute;top:13px;right:-22px;background:var(--red);color:white;font-family:'Syne',sans-serif;font-size:8px;font-weight:700;padding:3px 28px;transform:rotate(35deg);letter-spacing:1px}
+.f-name{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:11px}
+.f-price{font-family:'DM Mono',monospace;font-size:1.9rem;font-weight:500;letter-spacing:-1px;line-height:1;margin-bottom:4px}
+.f-period{font-size:11px;color:var(--muted2);margin-bottom:18px}
+.f-features{display:flex;flex-direction:column;gap:7px}
+.ff{display:flex;align-items:flex-start;gap:7px;font-size:12px;color:var(--muted2);font-weight:300}
+.ff::before{content:'✓';color:var(--green);font-weight:600;font-size:10px;flex-shrink:0;margin-top:2px}
+.ff.no{color:var(--muted)}
+.ff.no::before{content:'×';color:var(--muted)}
+.f-btn{display:block;width:100%;background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:10px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;text-align:center;margin-top:18px;transition:all .2s;color:var(--ink)}
+.f-btn:hover,.forfait.star .f-btn{background:var(--red);color:white;border-color:var(--red)}
+
+/* MODALS */
+.overlay{position:fixed;inset:0;background:rgba(248,246,244,.9);backdrop-filter:blur(12px);z-index:500;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity .25s}
+.overlay.open{opacity:1;pointer-events:all}
+.modal-box{background:var(--s1);border:1px solid var(--border2);border-radius:13px;width:100%;max-height:88vh;overflow-y:auto;transform:translateY(18px);transition:transform .25s;position:relative}
+.overlay.open .modal-box{transform:translateY(0)}
+.modal-box.sm{max-width:460px}
+.modal-box.md{max-width:680px}
+.modal-box.lg{max-width:860px}
+.m-close{position:absolute;top:14px;right:14px;width:30px;height:30px;background:var(--s2);border:1px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;color:var(--muted2);z-index:10;transition:all .15s}
+.m-close:hover{background:var(--red-dim);border-color:var(--red-border);color:var(--red3)}
+.m-header{background:var(--s2);border-bottom:1px solid var(--border);padding:22px;position:relative}
+.m-header::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--red),var(--gold))}
+.m-grid2{display:grid;grid-template-columns:72px 1fr;gap:14px;margin-bottom:14px}
+.m-img{width:72px;height:72px;background:var(--s3);border:1px solid var(--border);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:2.2rem}
+.m-title{font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;color:var(--ink);margin-bottom:7px;line-height:1.2}
+.m-tags{display:flex;gap:4px;flex-wrap:wrap}
+.m-tag{background:var(--s3);border:1px solid var(--border);border-radius:3px;padding:2px 7px;font-size:9px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--muted2)}
+.m-tag.live{color:var(--green);border-color:var(--green-border);background:var(--green-dim)}
+.m-tag.src{color:var(--gold2);border-color:rgba(196,146,74,.2);background:rgba(196,146,74,.05)}
+.m-specs{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--border);padding-top:12px}
+.mspec{text-align:center;padding:0 6px;border-right:1px solid var(--border)}
+.mspec:last-child{border-right:none}
+.mspec-val{font-family:'DM Mono',monospace;font-size:1.1rem;font-weight:500;display:block;margin-bottom:2px;letter-spacing:-.4px}
+.mspec-val.r{color:var(--red3)}.mspec-val.gr{color:var(--green)}.mspec-val.g{color:var(--gold2)}
+.mspec-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+.m-body{padding:20px;display:flex;flex-direction:column;gap:18px}
+.m-sec-ttl{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;gap:7px}
+.m-sec-ttl::before{content:'';width:3px;height:11px;border-radius:2px;flex-shrink:0}
+.mst-r::before{background:var(--red)}.mst-g::before{background:var(--gold)}.mst-gr::before{background:var(--green)}
+.fiche-grid{background:var(--s2);border:1px solid var(--border);border-radius:7px;overflow:hidden;display:grid;grid-template-columns:1fr 1fr}
+.fi{padding:9px 13px;border-bottom:1px solid var(--border);border-right:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.fi:nth-child(even){border-right:none}
+.fi:nth-last-child(-n+2){border-bottom:none}
+.fi-k{font-size:11px;color:var(--muted2)}.fi-v{font-size:12px;font-weight:600;color:var(--ink);text-align:right}
+.verdict-box{background:var(--s2);border:1px solid var(--border);border-left:3px solid var(--green);border-radius:0 7px 7px 0;padding:13px 15px}
+.vb-lbl{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--green);margin-bottom:5px}
+.vb-txt{font-size:13px;color:var(--ink);line-height:1.6;font-weight:300}
+.vb-txt strong{font-weight:600}
+.raisons{display:flex;flex-direction:column;gap:7px}
+.raison{display:grid;grid-template-columns:26px 1fr;gap:10px;align-items:flex-start}
+.r-num{width:26px;height:26px;border-radius:50%;background:var(--s3);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:10px;font-weight:700;color:var(--gold2);flex-shrink:0}
+.r-title{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:2px}
+.r-desc{font-size:11px;font-weight:300;color:var(--muted2);line-height:1.5}
+.r-desc strong{color:var(--ink);font-weight:500}
+.marche{background:var(--s2);border:1px solid var(--border);border-radius:7px;overflow:hidden}
+.marche-hdr{padding:9px 13px;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);background:var(--s3);border-bottom:1px solid var(--border)}
+.marche-row{display:flex;align-items:center;justify-content:space-between;padding:9px 13px;border-bottom:1px solid var(--border);font-size:12px}
+.marche-row:last-child{border-bottom:none}
+.mr-l{display:flex;align-items:center;gap:7px;color:var(--muted2)}
+.mr-dot{width:6px;height:6px;border-radius:50%}
+.mr-dot.current{background:var(--red3)}.mr-dot.avg{background:var(--muted2)}.mr-dot.rec{background:var(--green)}
+.mr-p{font-family:'DM Mono',monospace;font-size:12px;font-weight:500;color:var(--ink)}
+.mr-p.current{color:var(--red3)}.mr-p.rec{color:var(--green)}
+.mr-n{font-size:10px;color:var(--muted)}
+/* SCORE RING IN MODAL */
+.score-section{display:flex;align-items:center;gap:20px;background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:16px}
+.score-labels{flex:1}
+.score-labels .score-row{display:flex;align-items:center;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);font-size:12px}
+.score-labels .score-row:last-child{border-bottom:none}
+.score-key{color:var(--muted2)}
+.score-val{font-family:'DM Mono',monospace;font-weight:500}
+.score-val.ok{color:var(--green)}.score-val.warn{color:var(--orange)}.score-val.bad{color:var(--red)}
+.trust-sec{display:flex;flex-direction:column}
+.trust-item{display:flex;align-items:center;gap:9px;padding:9px 13px;border-bottom:1px solid var(--border);font-size:12px;background:var(--s2);border-radius:0}
+.trust-item:last-child{border-bottom:none;border-radius:0 0 7px 7px}
+.trust-item:first-child{border-radius:7px 7px 0 0}
+.ti-ico{font-size:13px;flex-shrink:0}
+.ti-txt{color:var(--muted2);font-weight:300}
+.ti-txt strong{color:var(--ink);font-weight:500}
+.m-cta{display:flex;gap:8px;flex-wrap:wrap}
+.btn-voir{flex:1;background:var(--red);color:white;border:none;border-radius:6px;padding:12px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;text-align:center;transition:background .15s;min-width:140px}
+.btn-voir:hover{background:var(--red2)}
+.btn-mini{background:transparent;color:var(--muted2);border:1px solid var(--border2);border-radius:6px;padding:12px 14px;font-size:11px;font-weight:500;cursor:pointer;transition:all .15s;white-space:nowrap}
+.btn-mini:hover{border-color:var(--muted);color:var(--ink)}
+
+/* VENDEUR MODAL */
+.vm-hdr{display:flex;align-items:center;gap:14px;margin-bottom:18px;padding-bottom:18px;border-bottom:1px solid var(--border)}
+.vm-av{width:50px;height:50px;border-radius:50%;background:var(--s3);border:2px solid var(--red);display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0}
+.vm-name{font-family:'Syne',sans-serif;font-size:1rem;font-weight:700}
+.vm-since{font-size:11px;color:var(--muted2);margin-top:1px}
+.vm-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px}
+.vm-stat{background:var(--s2);border:1px solid var(--border);border-radius:7px;padding:11px;text-align:center}
+.vm-sv{font-family:'DM Mono',monospace;font-size:1.3rem;font-weight:500;display:block;margin-bottom:2px}
+.vm-sl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+.vm-ann-ttl{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.vm-ann-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);cursor:pointer}
+.vm-ann-item:last-child{border-bottom:none}
+.vm-ann-item:hover{opacity:.8}
+.vm-a-icon{font-size:1.3rem;width:28px;text-align:center}
+.vm-a-title{font-size:12px;font-weight:600;color:var(--ink);flex:1}
+.vm-a-prix{font-family:'DM Mono',monospace;font-size:12px;font-weight:500}
+
+/* COMPARATEUR TABLE */
+.cmp-tbl{overflow-x:auto}
+.cmp-tbl table{width:100%;border-collapse:collapse}
+.cmp-tbl th{background:var(--s2);padding:11px 14px;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--muted2);text-align:left;border-bottom:1px solid var(--border)}
+.cmp-tbl td{padding:11px 14px;font-size:13px;border-bottom:1px solid var(--border)}
+.cmp-tbl tr:hover td{background:var(--s2)}
+.cmp-tbl .lbl{color:var(--muted2);font-size:11px;font-weight:600}
+.cmp-tbl .best{color:var(--green);font-weight:600}
+.cmp-tbl .worst{color:var(--red3)}
+.mono{font-family:'DM Mono',monospace;font-weight:500}
+
+/* TOAST */
+.toast{position:fixed;bottom:22px;right:22px;background:var(--ink);color:white;border-radius:8px;padding:11px 18px;font-size:13px;font-weight:500;z-index:900;transform:translateY(70px);opacity:0;transition:all .28s;display:flex;align-items:center;gap:9px;box-shadow:var(--shadow-lg)}
+.toast.show{transform:translateY(0);opacity:1}
+
+/* MOBILE FILTER DRAWER */
+.drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:400;opacity:0;pointer-events:none;transition:opacity .25s}
+.drawer-overlay.open{opacity:1;pointer-events:all}
+.drawer{position:fixed;left:0;top:0;bottom:0;width:260px;background:var(--s1);z-index:401;padding:20px;overflow-y:auto;transform:translateX(-100%);transition:transform .28s;border-right:1px solid var(--border)}
+.drawer.open{transform:translateX(0)}
+.drawer-close{position:absolute;top:14px;right:14px;width:28px;height:28px;background:var(--s2);border:1px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;color:var(--muted2)}
+
+/* RESPONSIVE */
+@media(max-width:720px){
+  .mkt-layout{grid-template-columns:1fr}
+  .filter-panel{display:none}
+  .mobile-filter-btn{display:block}
+  .ann{grid-template-columns:80px 1fr}
+  .marge-block{display:none}
+  .hero-stats{gap:20px}
+  .m-specs{grid-template-columns:repeat(2,1fr)}
+  .fiche-grid{grid-template-columns:1fr}
+  .how-grid{grid-template-columns:repeat(2,1fr)}
+  .affil-box{grid-template-columns:1fr}
+  nav{padding:0 14px}
+  .nav-links-desktop{display:none}
+  .nav-search{max-width:180px}
+  .dj-grid{grid-template-columns:repeat(2,1fr)}
+  .histo-grid{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo" onclick="scrollTo(0,0)">Deal<span style="color:var(--muted2)">bot</span><span class="logo-x">x</span></div>
+  <div class="nav-search">
+    <span class="ns-icon">🔍</span>
+    <input type="text" placeholder="Rechercher..." id="searchInput" oninput="handleSearch(this.value)" onfocus="showSearch()" onblur="setTimeout(hideSearch,200)">
+    <div class="search-dd" id="searchDD"></div>
+  </div>
+  <div class="nav-right">
+    <span class="nav-link nav-links-desktop" onclick="document.querySelector('.how-section').scrollIntoView({behavior:'smooth'})">Comment ça marche</span>
+    <span class="nav-link nav-links-desktop" onclick="document.querySelector('.forfaits-section').scrollIntoView({behavior:'smooth'})">Forfaits</span>
+    <div class="nav-icon-btn" onclick="toggleTheme()" id="themeBtn" title="Mode sombre">🌙</div>
+    <div class="nav-user" onclick="openLogin()">👤 Connexion</div>
+    <button class="nav-cta" onclick="document.querySelector('.forfaits-section').scrollIntoView({behavior:'smooth'})">S'abonner</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-kicker"><div class="kicker-dot"></div>Bot IA actif — 138 deals détectés aujourd'hui</div>
+  <h1><div>HUNT SMART.</div><div class="r">FLIP BETTER.</div><div class="o">WIN MORE.</div></h1>
+  <p class="hero-sub">Dealbotx scanne <strong>LBC, Marketplace, eBay, Vinted</strong> en temps réel. L'IA analyse chaque annonce — marge, fraude, prix de revente justifié.</p>
+  <div class="hero-actions">
+    <button class="btn-p" onclick="document.querySelector('.deals-jour').scrollIntoView({behavior:'smooth'})">Voir les deals →</button>
+    <button class="btn-s" onclick="document.querySelector('.how-section').scrollIntoView({behavior:'smooth'})">Comment ça marche</button>
+  </div>
+  <div class="hero-stats">
+    <div class="hstat"><span class="hstat-val r">138</span><div class="hstat-label">Deals détectés</div></div>
+    <div class="hstat"><span class="hstat-val g">×2.8</span><div class="hstat-label">Marge moyenne</div></div>
+    <div class="hstat"><span class="hstat-val gr">5</span><div class="hstat-label">Plateformes</div></div>
+    <div class="hstat"><span class="hstat-val r">24h</span><div class="hstat-label">Délai moyen vente</div></div>
+  </div>
+</section>
+
+<!-- COMMENT ÇA MARCHE -->
+<div class="how-section">
+  <div class="sec-tag">Simple</div>
+  <h2 class="sec-title">Comment ça marche</h2>
+  <p class="sec-sub">3 étapes pour trouver ta prochaine bonne affaire et la retourner avec marge.</p>
+  <div class="how-grid">
+    <div class="how-card">
+      <span class="how-num">01</span>
+      <span class="how-icon">🔍</span>
+      <div class="how-title">Le bot scanne</div>
+      <div class="how-desc">Dealbotx analyse LBC, Marketplace, eBay et Vinted toutes les 15 à 45 minutes. Chaque nouvelle annonce est immédiatement évaluée par l'IA.</div>
+    </div>
+    <div class="how-card">
+      <span class="how-num">02</span>
+      <span class="how-icon">🤖</span>
+      <div class="how-title">L'IA calcule la marge</div>
+      <div class="how-desc">Pour chaque annonce, l'IA extrait les specs, compare avec le marché actuel, estime le prix de revente réaliste et détecte les signes d'arnaque.</div>
+    </div>
+    <div class="how-card">
+      <span class="how-num">03</span>
+      <span class="how-icon">🔔</span>
+      <div class="how-title">Tu reçois l'alerte</div>
+      <div class="how-desc">Dès qu'une annonce correspond à tes critères (catégorie, région, marge mini), tu reçois une notification Telegram ou Discord avec l'analyse complète.</div>
+    </div>
+    <div class="how-card">
+      <span class="how-num">04</span>
+      <span class="how-icon">💰</span>
+      <div class="how-title">Tu flippes et gagnes</div>
+      <div class="how-desc">Tu achètes au prix d'occasion sous-coté, tu retapes si besoin, tu republies avec de bonnes photos et une annonce optimisée. Marge réalisée en 24–72h.</div>
+    </div>
+  </div>
+</div>
+
+<!-- DEALS DU JOUR -->
+<div class="deals-jour">
+  <div class="sec-tag">Sélection IA du jour</div>
+  <h2 class="sec-title">Deals du jour 🔥</h2>
+  <p class="sec-sub">Les 5 meilleures opportunités détectées ce matin. Actualisé toutes les heures.</p>
+  <div class="dj-grid">
+    <div class="dj-card top" onclick="openModal('velo')">
+      <div class="dj-score hot">92/100</div>
+      <span class="dj-icon">🚵</span>
+      <div class="dj-title">VTT Trek X-Caliber 7 2020</div>
+      <div class="dj-meta">Shimano Deore 1×11 · LeBonCoin · il y a 12min</div>
+      <div class="dj-prix"><span class="dj-achat">140 €</span><span class="dj-arr">→</span><span class="dj-revente">~380 €</span><span class="dj-gain">+240 €</span></div>
+    </div>
+    <div class="dj-card" onclick="openModal('pc')">
+      <div class="dj-score hot">88/100</div>
+      <span class="dj-icon">💻</span>
+      <div class="dj-title">PC Gaming RTX 3080 / R7 5800X</div>
+      <div class="dj-meta">32GB RAM · LBC · il y a 1h</div>
+      <div class="dj-prix"><span class="dj-achat">400 €</span><span class="dj-arr">→</span><span class="dj-revente">~850 €</span><span class="dj-gain">+450 €</span></div>
+    </div>
+    <div class="dj-card" onclick="openModal('ps5')">
+      <div class="dj-score good">76/100</div>
+      <span class="dj-icon">🎮</span>
+      <div class="dj-title">PS5 + 2 manettes + 3 jeux</div>
+      <div class="dj-meta">Marketplace · il y a 34min</div>
+      <div class="dj-prix"><span class="dj-achat">255 €</span><span class="dj-arr">→</span><span class="dj-revente">~480 €</span><span class="dj-gain">+225 €</span></div>
+    </div>
+    <div class="dj-card" onclick="openModal('jordan')">
+      <div class="dj-score good">71/100</div>
+      <span class="dj-icon">👟</span>
+      <div class="dj-title">Jordan 1 Chicago US10</div>
+      <div class="dj-meta">Vinted · il y a 2h</div>
+      <div class="dj-prix"><span class="dj-achat">170 €</span><span class="dj-arr">→</span><span class="dj-revente">~270 €</span><span class="dj-gain">+100 €</span></div>
+    </div>
+    <div class="dj-card top" onclick="openModal('velo')">
+      <div class="dj-score hot">84/100</div>
+      <span class="dj-icon">⚡</span>
+      <div class="dj-title">VAE Moustache Samedi 27</div>
+      <div class="dj-meta">Bosch 500Wh · eBay · il y a 3h</div>
+      <div class="dj-prix"><span class="dj-achat">420 €</span><span class="dj-arr">→</span><span class="dj-revente">~950 €</span><span class="dj-gain">+530 €</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ALERTE -->
+<div class="alerte-wrap">
+  <div class="alerte-box">
+    <div class="alerte-ico">🔔</div>
+    <div class="alerte-txt"><h4>Crée une alerte personnalisée</h4><p>Reçois une notification Telegram dès qu'un produit correspond à tes critères.</p></div>
+    <div class="alerte-form">
+      <input class="alerte-input" type="text" placeholder="Ex: Trek, PS5, RTX..." id="alerteKw">
+      <select class="alerte-sel" id="alerteCat"><option value="">Catégorie</option><option>Vélos</option><option>Gaming</option><option>PC</option><option>Téléphones</option><option>Sneakers</option><option>Voitures</option></select>
+      <select class="alerte-sel" id="alerteCoeff"><option value="">Marge min</option><option>×1.5</option><option>×2</option><option>×2.5</option><option>×3+</option></select>
+      <select class="alerte-sel" id="alerteZone"><option value="">Toute la France</option><option>Lyon / Rhône</option><option>Paris / IDF</option><option>Marseille</option><option>Bordeaux</option><option>Roanne / Loire</option></select>
+      <button class="alerte-btn" onclick="creerAlerte()">Créer l'alerte →</button>
+    </div>
+  </div>
+</div>
+
+<!-- MARKETPLACE -->
+<div class="mkt-wrap" id="marketplace">
+  <div class="sec-tag">Live</div>
+  <h2 class="sec-title">Marketplace en temps réel</h2>
+  <p class="sec-sub">Chaque annonce analysée par IA — score global, marge, fraude, prix de revente justifié.</p>
+
+  <div class="marge-pills">
+    <div class="mpill active" onclick="filterMarge(this)"><div class="mpill-icon">🔥</div><div><div class="mpill-label">Tout</div><div class="mpill-count">138</div></div></div>
+    <div class="mpill" onclick="filterMarge(this)"><div class="mpill-icon">💎</div><div><div class="mpill-label">×3+</div><div class="mpill-count">24</div></div><span class="mpill-badge hot">Top</span></div>
+    <div class="mpill" onclick="filterMarge(this)"><div class="mpill-icon">✅</div><div><div class="mpill-label">×2–×3</div><div class="mpill-count">52</div></div><span class="mpill-badge ok">Bon</span></div>
+    <div class="mpill" onclick="filterMarge(this)"><div class="mpill-icon">📦</div><div><div class="mpill-label">×1.5–×2</div><div class="mpill-count">62</div></div><span class="mpill-badge low">OK</span></div>
+  </div>
+
+  <div class="delivery-bar">
+    <span style="font-size:11px;font-weight:600;color:var(--muted2)">Livraison :</span>
+    <div class="dtog on" onclick="toggleDtog(this)">🌍 Tout</div>
+    <div class="dtog" onclick="toggleDtog(this)">📦 Livraison uniquement</div>
+    <div class="dtog" onclick="toggleDtog(this)">🤝 Main propre</div>
+  </div>
+
+  <div class="compare-bar">
+    <span class="cmp-label">⚖️ Comparer :</span>
+    <div class="cmp-slots" id="cmpSlots">
+      <div class="cmp-slot" id="cslot0">Produit 1</div>
+      <div class="cmp-slot" id="cslot1">Produit 2</div>
+      <div class="cmp-slot" id="cslot2">Produit 3</div>
+    </div>
+    <button class="btn-cmp" id="btnCmp" onclick="openCmp()" disabled>Comparer →</button>
+  </div>
+
+  <div style="display:flex;gap:8px;margin-bottom:10px;align-items:center">
+    <button class="mobile-filter-btn" onclick="openDrawer()">⚙️ Filtres</button>
+  </div>
+
+  <div class="mkt-layout">
+    <div class="filter-panel">
+      <div class="fp-sec">
+        <div class="fp-ttl">Marge minimum</div>
+        <div class="slider-wrap">
+          <div class="slider-labels"><span>×1.5</span><span class="slider-val" id="sVal">×2.0 min</span><span>×5+</span></div>
+          <input type="range" min="15" max="50" value="20" oninput="document.getElementById('sVal').textContent='×'+(this.value/10).toFixed(1)+' min'">
+        </div>
+      </div>
+      <div class="fp-sec">
+        <div class="fp-ttl">Catégorie</div>
+        <div class="ci" onclick="toggleCat(this,'velos')"><div class="cb on">✓</div><div class="ci-lbl">🚲 Vélos</div><div class="ci-cnt">38</div></div>
+        <div class="ci" onclick="toggleCat(this,'gaming')"><div class="cb on">✓</div><div class="ci-lbl">🎮 Gaming</div><div class="ci-cnt">29</div></div>
+        <div class="ci" onclick="toggleCat(this,'pc')"><div class="cb on">✓</div><div class="ci-lbl">💻 PC & Info</div><div class="ci-cnt">22</div></div>
+        <div class="ci" onclick="toggleCat(this,'phones')"><div class="cb"></div><div class="ci-lbl">📱 Téléphones</div><div class="ci-cnt">31</div></div>
+        <div class="ci" onclick="toggleCat(this,'tv')"><div class="cb"></div><div class="ci-lbl">📺 TV & Audio</div><div class="ci-cnt">18</div></div>
+        <div class="ci" onclick="toggleCat(this,'sneakers')"><div class="cb"></div><div class="ci-lbl">👟 Sneakers</div><div class="ci-cnt">24</div></div>
+        <div class="ci" onclick="toggleCat(this,'voitures')"><div class="cb"></div><div class="ci-lbl">🚗 Voitures</div><div class="ci-cnt">17</div></div>
+        <div class="ci" onclick="toggleCat(this,'motos')"><div class="cb"></div><div class="ci-lbl">🏍️ Motos</div><div class="ci-cnt">9</div></div>
+        <div class="ci" onclick="toggleCat(this,'sport')"><div class="cb"></div><div class="ci-lbl">🏋️ Sport</div><div class="ci-cnt">19</div></div>
+        <div class="ci" onclick="toggleCat(this,'electro')"><div class="cb"></div><div class="ci-lbl">🧺 Électroménager</div><div class="ci-cnt">14</div></div>
+      </div>
+      <div id="dynFilters"></div>
+      <div class="fp-sec">
+        <div class="fp-ttl">Plateforme</div>
+        <div class="ci" onclick="toggleCi(this)"><div class="cb on">✓</div><div class="ci-lbl">LeBonCoin</div><div class="ci-cnt">54</div></div>
+        <div class="ci" onclick="toggleCi(this)"><div class="cb on">✓</div><div class="ci-lbl">Marketplace</div><div class="ci-cnt">42</div></div>
+        <div class="ci" onclick="toggleCi(this)"><div class="cb on">✓</div><div class="ci-lbl">eBay</div><div class="ci-cnt">28</div></div>
+        <div class="ci" onclick="toggleCi(this)"><div class="cb"></div><div class="ci-lbl">Vinted</div><div class="ci-cnt">14</div></div>
+      </div>
+    </div>
+
+    <div class="annonces-area">
+      <div class="sort-bar">
+        <div class="sort-info"><strong>89 résultats</strong> · Marge ×2 min</div>
+        <div class="sort-btns">
+          <div class="sbtn on" onclick="actSort(this)">Score ↓</div>
+          <div class="sbtn" onclick="actSort(this)">Récent</div>
+          <div class="sbtn" onclick="actSort(this)">Marge ↓</div>
+          <div class="sbtn" onclick="actSort(this)">Prix ↑</div>
+        </div>
+      </div>
+
+      <!-- ANNONCE 1 -->
+      <div class="ann featured" onclick="openModal('velo')">
+        <div class="ann-img">🚵<div class="trust-badge ok">✓</div><div class="score-badge hot">92</div></div>
+        <div class="ann-body">
+          <div><div class="ann-title">VTT Trek X-Caliber 7 2020 — Shimano Deore 1×11</div><div class="ann-desc">Freins hydrauliques, fourche RockShox 29". Très bon état, quelques rayures.</div></div>
+          <div class="ann-footer">
+            <div class="ann-tags"><span class="atag">Vélo</span><span class="atag">Trek</span><span class="atag ok">📦 Livraison</span></div>
+            <button class="btn-add-cmp" onclick="event.stopPropagation();addCmp('velo','VTT Trek X-Caliber 7','140','380')">+ Comp.</button>
+          </div>
+          <div class="ann-timer"><div class="timer-dot"></div><span id="timer1">Posté il y a 12 min</span></div>
+        </div>
+        <div class="marge-block">
+          <div><span class="mb-al">Prix d'achat</span><span class="mb-ap">140 €</span></div>
+          <span class="mb-arrow">↓ revente estimée</span>
+          <div><span class="mb-rl">Revente</span><span class="mb-rp">~380 €</span></div>
+          <div class="mb-bot"><div class="mb-coeff hot">×2.7</div><div class="mb-gain hot">+240 €</div></div>
+        </div>
+      </div>
+
+      <!-- ANNONCE 2 -->
+      <div class="ann" onclick="openModal('ps5')">
+        <div class="ann-img">🎮<div class="trust-badge ok">✓</div><div class="score-badge good">76</div></div>
+        <div class="ann-body">
+          <div><div class="ann-title">PS5 Standard + 2 DualSense + 3 jeux</div><div class="ann-desc">Console 4h d'utilisation, comme neuve. Boîtes originales complètes.</div></div>
+          <div class="ann-footer">
+            <div class="ann-tags"><span class="atag">Gaming</span><span class="atag ok">📦 Livraison</span></div>
+            <button class="btn-add-cmp" onclick="event.stopPropagation();addCmp('ps5','PS5 bundle','255','480')">+ Comp.</button>
+          </div>
+          <div class="ann-timer"><div class="timer-dot"></div><span>Posté il y a 34 min</span></div>
+        </div>
+        <div class="marge-block">
+          <div><span class="mb-al">Prix d'achat</span><span class="mb-ap">255 €</span></div>
+          <span class="mb-arrow">↓ revente estimée</span>
+          <div><span class="mb-rl">Revente</span><span class="mb-rp">~480 €</span></div>
+          <div class="mb-bot"><div class="mb-coeff good">×1.9</div><div class="mb-gain good">+225 €</div></div>
+        </div>
+      </div>
+
+      <!-- ANNONCE 3 -->
+      <div class="ann" onclick="openModal('pc')">
+        <div class="ann-img">💻<div class="trust-badge ok">✓</div><div class="score-badge hot">88</div></div>
+        <div class="ann-body">
+          <div><div class="ann-title">PC Gaming — RTX 3080 / Ryzen 7 5800X / 32GB</div><div class="ann-desc">SSD 1To NVMe, alim 750W Gold. Stable, testé. Vend cause upgrade.</div></div>
+          <div class="ann-footer">
+            <div class="ann-tags"><span class="atag">PC</span><span class="atag warn">🤝 Main propre</span></div>
+            <button class="btn-add-cmp" onclick="event.stopPropagation();addCmp('pc','PC RTX 3080','400','850')">+ Comp.</button>
+          </div>
+          <div class="ann-timer"><div class="timer-dot"></div><span>Posté il y a 1h 04min</span></div>
+        </div>
+        <div class="marge-block">
+          <div><span class="mb-al">Prix d'achat</span><span class="mb-ap">400 €</span></div>
+          <span class="mb-arrow">↓ revente estimée</span>
+          <div><span class="mb-rl">Revente</span><span class="mb-rp">~850 €</span></div>
+          <div class="mb-bot"><div class="mb-coeff hot">×2.1</div><div class="mb-gain hot">+450 €</div></div>
+        </div>
+      </div>
+
+      <!-- ANNONCE 4 VENDU -->
+      <div class="ann">
+        <div class="ann-img">🚴<div class="sold-ov"><div class="sold-tag">Vendu · 48h</div></div></div>
+        <div class="ann-body">
+          <div><div class="ann-title">Vélo route Decathlon RC 500 — Tiagra 2×10</div><div class="ann-desc">Fourche carbone, révision complète. Vendu en 48h.</div></div>
+          <div class="ann-tags"><span class="atag">Vélo</span><span class="atag warn">🤝 Main propre</span></div>
+        </div>
+        <div class="marge-block">
+          <div><span class="mb-al">Prix d'achat</span><span class="mb-ap sold">80 €</span></div>
+          <span class="mb-arrow">↓ revendu</span>
+          <div><span class="mb-rl">Revendu</span><span class="mb-rp sold">220 €</span></div>
+          <div class="mb-bot"><div class="mb-coeff sold">×2.8</div><div class="mb-gain sold">+140 €</div></div>
+        </div>
+      </div>
+
+      <!-- ANNONCE 5 -->
+      <div class="ann" onclick="openModal('jordan')">
+        <div class="ann-img">👟<div class="trust-badge ok">✓</div><div class="score-badge good">71</div></div>
+        <div class="ann-body">
+          <div><div class="ann-title">Nike Air Jordan 1 Retro "Chicago" US10</div><div class="ann-desc">2023 Restock, portées 2x. Boîte originale et lacets extras.</div></div>
+          <div class="ann-footer">
+            <div class="ann-tags"><span class="atag">Sneakers</span><span class="atag ok">📦 Livraison</span></div>
+            <button class="btn-add-cmp" onclick="event.stopPropagation();addCmp('jordan','Jordan 1 Chicago','170','270')">+ Comp.</button>
+          </div>
+          <div class="ann-timer"><div class="timer-dot"></div><span>Posté il y a 2h 17min</span></div>
+        </div>
+        <div class="marge-block">
+          <div><span class="mb-al">Prix d'achat</span><span class="mb-ap">170 €</span></div>
+          <span class="mb-arrow">↓ revente estimée</span>
+          <div><span class="mb-rl">Revente</span><span class="mb-rp">~270 €</span></div>
+          <div class="mb-bot"><div class="mb-coeff good">×1.6</div><div class="mb-gain good">+100 €</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- GRAPHIQUE PRIX -->
+<div class="chart-section">
+  <div class="sec-tag">Analyse marché</div>
+  <h2 class="sec-title">Évolution du prix de revente</h2>
+  <p class="sec-sub">Suivi des prix d'occasion sur les 30 derniers jours par catégorie.</p>
+  <div class="chart-box">
+    <div class="chart-header">
+      <div class="chart-title">VTT Trek X-Caliber 7 — Prix de revente moyen (€)</div>
+      <div class="chart-tabs">
+        <div class="chart-tab on" onclick="actChartTab(this,'7j')">7j</div>
+        <div class="chart-tab" onclick="actChartTab(this,'30j')">30j</div>
+        <div class="chart-tab" onclick="actChartTab(this,'90j')">90j</div>
+      </div>
+    </div>
+    <canvas id="priceChart"></canvas>
+  </div>
+</div>
+
+<!-- CARTE GÉOGRAPHIQUE -->
+<div class="map-section">
+  <div class="sec-tag">Géolocalisation</div>
+  <h2 class="sec-title">Deals près de toi</h2>
+  <p class="sec-sub">Choisis ta zone sur la carte et vois les annonces disponibles autour de toi.</p>
+  <div class="map-container">
+    <div class="map-header">
+      <h3>🗺️ Zone de recherche</h3>
+      <div class="map-controls">
+        <input class="map-input" type="text" placeholder="Ex: Lyon, Roanne..." id="mapCity" value="Lyon">
+        <div class="map-range-wrap">
+          Rayon : <span class="map-range-val" id="mapRangeVal">30 km</span>
+          <input type="range" min="5" max="100" value="30" style="width:80px" oninput="updateRadius(this.value)">
+        </div>
+        <button class="alerte-btn" onclick="centerMap()">Rechercher</button>
+      </div>
+    </div>
+    <div id="leafletMap"></div>
+    <div class="map-legend">
+      <div class="map-leg-item"><div class="map-leg-dot" style="background:var(--red)"></div>Score 80+</div>
+      <div class="map-leg-item"><div class="map-leg-dot" style="background:var(--green)"></div>Score 60–80</div>
+      <div class="map-leg-item"><div class="map-leg-dot" style="background:var(--orange)"></div>Score < 60</div>
+      <div class="map-leg-item"><div class="map-leg-dot" style="background:var(--muted)"></div>Vendu</div>
+    </div>
+  </div>
+</div>
+
+<!-- HISTORIQUE -->
+<div class="histo-section">
+  <div class="sec-tag">Prouvé</div>
+  <h2 class="sec-title">Deals réalisés cette semaine</h2>
+  <p class="sec-sub">Les vraies marges des flippeurs Dealbotx — avec délai de vente réel.</p>
+  <div class="histo-grid">
+    <div class="hc"><div class="hc-top"><div class="hc-icon">🚵</div><div class="hc-sold">Vendu</div></div><div class="hc-title">VTT Scott Scale 940</div><div class="hc-prix"><span class="hc-a">95 €</span><span class="hc-r">240 €</span><span class="hc-g">+145 €</span></div><div class="hc-time">Vendu en 38h · Lyon</div></div>
+    <div class="hc"><div class="hc-top"><div class="hc-icon">🎮</div><div class="hc-sold">Vendu</div></div><div class="hc-title">Xbox Series S + 5 jeux</div><div class="hc-prix"><span class="hc-a">150 €</span><span class="hc-r">280 €</span><span class="hc-g">+130 €</span></div><div class="hc-time">Vendu en 24h · Paris</div></div>
+    <div class="hc"><div class="hc-top"><div class="hc-icon">📱</div><div class="hc-sold">Vendu</div></div><div class="hc-title">iPhone 14 Pro 256Go</div><div class="hc-prix"><span class="hc-a">480 €</span><span class="hc-r">750 €</span><span class="hc-g">+270 €</span></div><div class="hc-time">Vendu en 12h · Bordeaux</div></div>
+    <div class="hc"><div class="hc-top"><div class="hc-icon">👟</div><div class="hc-sold">Vendu</div></div><div class="hc-title">Yeezy 350 V2 Zebra US9</div><div class="hc-prix"><span class="hc-a">130 €</span><span class="hc-r">240 €</span><span class="hc-g">+110 €</span></div><div class="hc-time">Vendu en 6h · Vinted</div></div>
+    <div class="hc"><div class="hc-top"><div class="hc-icon">🚲</div><div class="hc-sold">Vendu</div></div><div class="hc-title">BMX Wethepeople Crysis</div><div class="hc-prix"><span class="hc-a">60 €</span><span class="hc-r">180 €</span><span class="hc-g">+120 €</span></div><div class="hc-time">Vendu en 72h · Roanne</div></div>
+    <div class="hc"><div class="hc-top"><div class="hc-icon">💻</div><div class="hc-sold">Vendu</div></div><div class="hc-title">MacBook Pro M1 14"</div><div class="hc-prix"><span class="hc-a">900 €</span><span class="hc-r">1350 €</span><span class="hc-g">+450 €</span></div><div class="hc-time">Vendu en 8h · eBay</div></div>
+  </div>
+</div>
+
+<!-- FAQ -->
+<div class="faq-section">
+  <div class="sec-tag">Questions fréquentes</div>
+  <h2 class="sec-title">FAQ</h2>
+  <p class="sec-sub">Tout ce que tu dois savoir avant de commencer.</p>
+  <div class="faq-list">
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Comment fonctionne l'analyse IA de Dealbotx ?</div>
+      <div class="faq-a">Pour chaque annonce, l'IA extrait automatiquement les spécifications du produit, compare avec les annonces similaires actives sur le marché, estime un prix de revente réaliste basé sur les vraies transactions récentes, et calcule la marge potentielle. L'analyse prend aussi en compte les signaux de fraude (compte récent, photos volées, prix anormal).</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Comment recevoir les alertes sur Telegram ?</div>
+      <div class="faq-a">Après ton inscription, tu rejoins le canal Telegram Dealbotx et tu configures tes critères (catégorie, région, marge minimum). Dès qu'une annonce correspond, tu reçois une notification avec l'analyse complète directement sur ton téléphone.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Les prix de revente sont-ils vraiment fiables ?</div>
+      <div class="faq-a">L'IA base ses estimations sur les annonces similaires actuellement actives et les transactions récentes — pas sur le prix neuf en magasin. L'objectif est de donner un prix d'occasion réaliste qui permet une vente rapide (24–72h) tout en maximisant la marge.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Puis-je annuler mon abonnement à tout moment ?</div>
+      <div class="faq-a">Oui, sans engagement. Tu peux annuler depuis ton espace personnel à tout moment. L'accès reste actif jusqu'à la fin de la période payée.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Quelles plateformes sont surveillées ?</div>
+      <div class="faq-a">LeBonCoin (toutes les 15 min), Facebook Marketplace (30–45 min), eBay via API officielle (20 min), Vinted (30 min). Vestiaire Collective est disponible uniquement avec le forfait Pro.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Le bot fonctionne-t-il 24h/24 ?</div>
+      <div class="faq-a">Oui. Le bot tourne en continu sur un serveur dédié, 7j/7 et 24h/24. Tu ne rates aucune bonne affaire même la nuit.</div>
+    </div>
+  </div>
+</div>
+
+<!-- AFFILIATION -->
+<div class="affil-section">
+  <div class="affil-box">
+    <div>
+      <div class="affil-title">🎁 Invite tes amis, gagne 1 mois gratuit</div>
+      <div class="affil-desc">Pour chaque ami qui s'abonne via ton lien, vous gagnez tous les deux 1 mois offert. Pas de limite — plus tu parraines, plus tu économises.</div>
+      <div class="affil-link">
+        <input class="affil-input" type="text" value="dealbotx.fr/ref/adrien974" readonly id="affilLink">
+        <button class="affil-copy" onclick="copyAffil()">Copier</button>
+      </div>
+    </div>
+    <div class="affil-stats">
+      <div><span class="affil-stat-val">0</span><div class="affil-stat-lbl">Filleuls actifs</div></div>
+      <div><span class="affil-stat-val" style="color:var(--green)">0 mois</span><div class="affil-stat-lbl">Gagnés</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- FORFAITS -->
+<div class="forfaits-section">
+  <div class="sec-tag">Abonnements</div>
+  <h2 class="sec-title">Choisis ton forfait</h2>
+  <p class="sec-sub">Du gratuit pour découvrir au Pro pour les flippeurs sérieux.</p>
+  <div class="forfaits-grid">
+    <div class="forfait">
+      <div class="f-name">Gratuit</div>
+      <div class="f-price" style="color:var(--muted)">0€</div>
+      <div class="f-period">pour toujours</div>
+      <div class="f-features">
+        <div class="ff">Vélos + Gaming uniquement</div>
+        <div class="ff">1 région fixe</div>
+        <div class="ff">Délai 2h</div>
+        <div class="ff no">Score global /100</div>
+        <div class="ff no">Alertes personnalisées</div>
+        <div class="ff no">Comparateur</div>
+      </div>
+      <button class="f-btn" onclick="openLogin()">Commencer →</button>
+    </div>
+    <div class="forfait">
+      <div class="f-name">Starter</div>
+      <div class="f-price" style="color:var(--red3)">4,99€</div>
+      <div class="f-period">par mois</div>
+      <div class="f-features">
+        <div class="ff">3 catégories au choix</div>
+        <div class="ff">1 région configurable</div>
+        <div class="ff">Délai 30 min</div>
+        <div class="ff">Score global /100</div>
+        <div class="ff">1 alerte personnalisée</div>
+        <div class="ff no">Comparateur</div>
+      </div>
+      <button class="f-btn" onclick="openLogin()">S'abonner →</button>
+    </div>
+    <div class="forfait star">
+      <div class="f-name">Flippeur</div>
+      <div class="f-price" style="color:var(--gold2)">12,99€</div>
+      <div class="f-period">par mois</div>
+      <div class="f-features">
+        <div class="ff">Toutes catégories</div>
+        <div class="ff">3 zones sur carte</div>
+        <div class="ff">Alertes 15 min</div>
+        <div class="ff">Score + analyse complète</div>
+        <div class="ff">Alertes illimitées</div>
+        <div class="ff">Comparateur inclus</div>
+      </div>
+      <button class="f-btn" onclick="openLogin()">S'abonner →</button>
+    </div>
+    <div class="forfait">
+      <div class="f-name">Pro</div>
+      <div class="f-price" style="color:var(--ink)">24,99€</div>
+      <div class="f-period">par mois</div>
+      <div class="f-features">
+        <div class="ff">Tout Flippeur +</div>
+        <div class="ff">Zones illimitées</div>
+        <div class="ff">Alertes 5 min</div>
+        <div class="ff">Vestiaire Collective</div>
+        <div class="ff">Rapport hebdo IA</div>
+        <div class="ff">Historique complet</div>
+      </div>
+      <button class="f-btn" onclick="openLogin()">S'abonner →</button>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer style="background:var(--s1);border-top:1px solid var(--border);padding:40px 24px;text-align:center;margin-top:60px">
+  <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:6px">Dealbot<span style="color:var(--red3)">x</span></div>
+  <div style="font-size:11px;color:var(--muted);margin-bottom:16px">Bot. Deals. Bo<span style="color:var(--red3)">x</span>. · dealbotx.fr</div>
+  <div style="display:flex;gap:18px;justify-content:center;font-size:11px;color:var(--muted);flex-wrap:wrap">
+    <span style="cursor:pointer">CGV</span><span style="cursor:pointer">Confidentialité</span><span style="cursor:pointer">Contact</span><span style="cursor:pointer">Telegram</span><span style="cursor:pointer">Discord</span><span style="cursor:pointer">TikTok</span><span style="cursor:pointer">Instagram</span>
+  </div>
+</footer>
+
+<!-- TOAST -->
+<div class="toast" id="toast"><span id="toastIco">✅</span><span id="toastMsg"></span></div>
+
+<!-- LOGIN MODAL -->
+<div class="login-overlay overlay" id="loginOverlay" onclick="closeOverlay('loginOverlay')">
+  <div class="modal-box sm" onclick="event.stopPropagation()">
+    <div class="m-close" onclick="closeOverlay('loginOverlay')">✕</div>
+    <div style="padding:32px">
+      <div class="lb-logo">Dealbot<span style="color:var(--red3)">x</span></div>
+      <div class="lb-sub">Connecte-toi pour accéder à tes alertes et ton historique.</div>
+      <div class="lb-tabs">
+        <div class="lb-tab on" onclick="switchLoginTab(this,'login')">Connexion</div>
+        <div class="lb-tab" onclick="switchLoginTab(this,'register')">Inscription</div>
+      </div>
+      <div id="loginForm">
+        <div class="lb-field"><label>Email</label><input type="email" placeholder="ton@email.com"></div>
+        <div class="lb-field"><label>Mot de passe</label><input type="password" placeholder="••••••••"></div>
+        <button class="lb-btn" onclick="fakeLogin()">Se connecter →</button>
+      </div>
+      <div id="registerForm" style="display:none">
+        <div class="lb-field"><label>Prénom</label><input type="text" placeholder="Adrien"></div>
+        <div class="lb-field"><label>Email</label><input type="email" placeholder="ton@email.com"></div>
+        <div class="lb-field"><label>Mot de passe</label><input type="password" placeholder="Minimum 8 caractères"></div>
+        <button class="lb-btn" onclick="fakeRegister()">Créer mon compte →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DÉTAIL -->
+<div class="overlay" id="detailOverlay" onclick="closeOverlay('detailOverlay')">
+  <div class="modal-box md" onclick="event.stopPropagation()">
+    <div class="m-close" onclick="closeOverlay('detailOverlay')">✕</div>
+    <div class="m-header">
+      <div class="m-grid2">
+        <div class="m-img" id="mImg">🚵</div>
+        <div>
+          <div class="m-title" id="mTitle"></div>
+          <div class="m-tags">
+            <span class="m-tag src" id="mSrc"></span>
+            <span class="m-tag" id="mCat"></span>
+            <span class="m-tag live">🟢 Active</span>
+            <span class="m-tag" id="mTime"></span>
+          </div>
+        </div>
+      </div>
+      <div class="m-specs">
+        <div class="mspec"><span class="mspec-val r" id="mAchat"></span><div class="mspec-lbl">Prix demandé</div></div>
+        <div class="mspec"><span class="mspec-val gr" id="mRevente"></span><div class="mspec-lbl">Revente estimée</div></div>
+        <div class="mspec"><span class="mspec-val g" id="mCoeff"></span><div class="mspec-lbl">Coefficient</div></div>
+        <div class="mspec"><span class="mspec-val gr" id="mGain"></span><div class="mspec-lbl">Gain estimé</div></div>
+      </div>
+    </div>
+    <div class="m-body">
+      <div><div class="m-sec-ttl mst-g">Fiche technique</div><div class="fiche-grid" id="mFiche"></div></div>
+      <div>
+        <div class="m-sec-ttl mst-r">Score global Dealbotx</div>
+        <div class="score-section">
+          <div class="score-ring">
+            <svg width="70" height="70" viewBox="0 0 70 70">
+              <circle cx="35" cy="35" r="28" fill="none" stroke="var(--border)" stroke-width="6"/>
+              <circle cx="35" cy="35" r="28" fill="none" stroke="var(--red)" stroke-width="6" stroke-dasharray="175.9" id="scoreCircle" stroke-dashoffset="52.8" stroke-linecap="round"/>
+            </svg>
+            <div class="score-num" id="scoreNum" style="color:var(--red)">92</div>
+          </div>
+          <div class="score-labels">
+            <div class="score-row"><span class="score-key">Marge</span><span class="score-val ok" id="scoreMarge">Excellent</span></div>
+            <div class="score-row"><span class="score-key">Confiance vendeur</span><span class="score-val ok" id="scoreConf">Bon</span></div>
+            <div class="score-row"><span class="score-key">Livraison</span><span class="score-val ok" id="scoreLiv">Disponible</span></div>
+            <div class="score-row"><span class="score-key">Risque fraude</span><span class="score-val ok" id="scoreFraude">Faible</span></div>
+          </div>
+        </div>
+      </div>
+      <div><div class="m-sec-ttl mst-r">Analyse de la marge</div><div class="verdict-box"><div class="vb-lbl">✦ Verdict IA</div><div class="vb-txt" id="mVerdict"></div></div></div>
+      <div><div class="m-sec-ttl mst-g">Pourquoi on peut revendre plus cher</div><div class="raisons" id="mRaisons"></div></div>
+      <div><div class="m-sec-ttl mst-gr">Comparaison marché actuel</div><div class="marche"><div class="marche-hdr">Annonces similaires actives</div><div id="mMarche"></div></div></div>
+      <div><div class="m-sec-ttl mst-r">Score de confiance vendeur</div><div class="trust-sec" id="mTrust"></div></div>
+      <div style="border:1px solid var(--border);border-radius:8px;padding:14px;cursor:pointer;display:flex;align-items:center;gap:10px;background:var(--s2)" onclick="openVendeur()">
+        <span style="font-size:1.4rem">👤</span>
+        <div><div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px">Voir le profil complet du vendeur</div><div style="font-size:11px;color:var(--muted2)">Marc_69 · 23 ventes · 4.8★</div></div>
+        <span style="margin-left:auto;color:var(--muted)">→</span>
+      </div>
+      <div class="m-cta">
+        <button class="btn-voir">Voir l'annonce originale →</button>
+        <button class="btn-mini" onclick="showToast('🔔','Alerte créée ! Tu seras notifié si le prix baisse.')">🔔 M'alerter</button>
+        <button class="btn-mini" onclick="addCmpFromModal()">⚖️ Comparer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL VENDEUR -->
+<div class="overlay" id="vendeurOverlay" onclick="closeOverlay('vendeurOverlay')">
+  <div class="modal-box sm" onclick="event.stopPropagation()" style="padding:24px">
+    <div class="m-close" onclick="closeOverlay('vendeurOverlay')">✕</div>
+    <div class="vm-hdr">
+      <div class="vm-av">🧑</div>
+      <div><div class="vm-name">Marc_69</div><div class="vm-since">Membre depuis mars 2019 · LeBonCoin</div></div>
+    </div>
+    <div class="vm-stats">
+      <div class="vm-stat"><span class="vm-sv" style="color:var(--green)">4.8★</span><div class="vm-sl">Note</div></div>
+      <div class="vm-stat"><span class="vm-sv">23</span><div class="vm-sl">Ventes</div></div>
+      <div class="vm-stat"><span class="vm-sv" style="color:var(--green)">✓</span><div class="vm-sl">Vérifié</div></div>
+    </div>
+    <div class="vm-ann-ttl">Autres annonces de ce vendeur</div>
+    <div class="vm-ann-item" onclick="closeOverlay('vendeurOverlay');openModal('velo')"><div class="vm-a-icon">🚵</div><div class="vm-a-title">VTT Trek X-Caliber 7 2020</div><div class="vm-a-prix" style="color:var(--red)">140 €</div></div>
+    <div class="vm-ann-item"><div class="vm-a-icon">🚲</div><div class="vm-a-title">Vélo ville Decathlon Elops 500</div><div class="vm-a-prix">45 €</div></div>
+    <div class="vm-ann-item"><div class="vm-a-icon">🔧</div><div class="vm-a-title">Kit entretien vélo complet</div><div class="vm-a-prix">20 €</div></div>
+  </div>
+</div>
+
+<!-- MODAL COMPARATEUR -->
+<div class="overlay" id="cmpOverlay" onclick="closeOverlay('cmpOverlay')">
+  <div class="modal-box lg" onclick="event.stopPropagation()" style="padding:28px">
+    <div class="m-close" onclick="closeOverlay('cmpOverlay')">✕</div>
+    <div style="font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:800;margin-bottom:20px">⚖️ Comparaison</div>
+    <div class="cmp-tbl" id="cmpTable"></div>
+  </div>
+</div>
+
+<!-- DRAWER MOBILE -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-close" onclick="closeDrawer()">✕</div>
+  <div style="margin-top:20px;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:16px">Filtres</div>
+  <div class="fp-sec">
+    <div class="fp-ttl">Catégorie</div>
+    <div class="ci" onclick="toggleCi(this)"><div class="cb on">✓</div><div class="ci-lbl">🚲 Vélos</div></div>
+    <div class="ci" onclick="toggleCi(this)"><div class="cb on">✓</div><div class="ci-lbl">🎮 Gaming</div></div>
+    <div class="ci" onclick="toggleCi(this)"><div class="cb on">✓</div><div class="ci-lbl">💻 PC & Info</div></div>
+    <div class="ci" onclick="toggleCi(this)"><div class="cb"></div><div class="ci-lbl">📱 Téléphones</div></div>
+    <div class="ci" onclick="toggleCi(this)"><div class="cb"></div><div class="ci-lbl">👟 Sneakers</div></div>
+    <div class="ci" onclick="toggleCi(this)"><div class="cb"></div><div class="ci-lbl">🚗 Voitures</div></div>
+  </div>
+</div>
+
+<script>
+// ─── DATA ───
+const deals = {
+  velo:{img:'🚵',title:'VTT Trek X-Caliber 7 2020 — Shimano Deore 1×11',src:'LeBonCoin',cat:'Vélo',time:'il y a 12 min',achat:'140 €',revente:'~380 €',coeff:'×2.7',gain:'+240 €',score:92,
+    fiche:[['Marque','Trek'],['Modèle','X-Caliber 7'],['Année','2020'],['Taille','M (17.5")'],['Dérailleur','Shimano Deore M5100'],['Vitesses','1×11'],['Freins','Hydrauliques Shimano'],['Fourche','RockShox 30 Silver'],['Roues','29 pouces'],['Cadre','Alu Alpha Platinum'],['État','Bon / rayures légères'],['Prix neuf','849 € (2020)']],
+    verdict:'Ce vélo est <strong>sous-coté de ~60%</strong> par rapport au marché actuel. Le vendeur ignore la vraie valeur de la transmission Deore 1×11 et de la fourche RockShox. À 375€ il se vend en <strong>24–72h</strong>.',
+    raisons:[['Transmission Deore 1×11 très recherchée','Le groupe <strong>Shimano Deore 1×11</strong> est le sweet spot qualité/prix. Annonces similaires : 350–450€.'],['Freins hydrauliques = +40–60€','Rares à ce prix. Critère de filtre actif sur tous les sites.'],['Prix recommandé : 370–390€','<strong>375€</strong> est le prix psychologique idéal sous les 400€.'],['Marque Trek = crédibilité','Trek est la <strong>3ème marque la plus recherchée</strong> en VTT occasion sur LBC.']],
+    marche:[{d:'current',l:'Cette annonce',p:'140 €',n:'LeBonCoin · il y a 12 min'},{d:'avg',l:'X-Caliber 7 2020 état similaire',p:'320 €',n:'Marketplace · il y a 2j'},{d:'avg',l:'X-Caliber 7 2021 Deore 1×11',p:'390 €',n:'LBC · il y a 5j'},{d:'rec',l:'Prix de revente recommandé',p:'370–390 €',n:'Estimation IA · vente rapide'}],
+    trust:[{i:'✅',t:'<strong>Compte actif depuis 2019</strong> · 23 ventes · 4.8★'},{i:'✅',t:'<strong>Photos originales</strong> — reverse image check OK'},{i:'✅',t:'<strong>Prix cohérent</strong> avec vendeur non informé'},{i:'⚠️',t:'<strong>1 seule photo</strong> — demander photos supplémentaires'}],
+    scores:{marge:'Excellent',conf:'Bon',liv:'Disponible',fraude:'Faible'}},
+  ps5:{img:'🎮',title:'PS5 Standard + 2 DualSense + 3 jeux',src:'Facebook Marketplace',cat:'Gaming',time:'il y a 34 min',achat:'255 €',revente:'~480 €',coeff:'×1.9',gain:'+225 €',score:76,
+    fiche:[['Console','PlayStation 5'],['Version','Standard (Blu-ray)'],['État','Comme neuve'],['Utilisation','~4 heures'],['Manettes','2× DualSense'],['Jeux','God of War + Spider-Man 2 + FC25'],['Boîtes','Originales complètes'],['Garantie','Non'],['Livraison','Oui, Mondial Relay'],['Vendeur','Actif depuis 2020'],['Prix neuf','549 €'],['Valeur bundle neuf','~720 €']],
+    verdict:'Bundle très bien valorisé. <strong>2 DualSense + 3 jeux inclus</strong> pour 255€. Console seule vaut 350€+ en occasion. Prix recommandé : <strong>460–490€</strong>.',
+    raisons:[['Bundle > somme des parties','Console 350€ + 2 manettes 80€ + 3 jeux 60€ = <strong>490€ de valeur perçue</strong>.'],['Comme neuve = premium justifié','4h d\'utilisation. <strong>Photos propres + boîtes complètes</strong>.'],['Jeux récents = valeur ajoutée','FC25 seul 25–35€. God of War 20–30€. Justifie 40–50€ de plus.']],
+    marche:[{d:'current',l:'Cette annonce',p:'255 €',n:'Marketplace · il y a 34 min'},{d:'avg',l:'PS5 seule occasion',p:'350 €',n:'LBC · prix moyen'},{d:'avg',l:'PS5 + 1 manette',p:'380 €',n:'eBay · vendu récemment'},{d:'rec',l:'Prix recommandé bundle',p:'460–490 €',n:'Estimation IA · < 48h'}],
+    trust:[{i:'✅',t:'<strong>Compte actif depuis 2020</strong>'},{i:'✅',t:'<strong>Plusieurs photos</strong> de qualité'},{i:'✅',t:'<strong>Livraison Mondial Relay</strong>'},{i:'✅',t:'<strong>Prix cohérent</strong>'}],
+    scores:{marge:'Bon',conf:'Bon',liv:'Disponible',fraude:'Faible'}},
+  pc:{img:'💻',title:'PC Gaming — RTX 3080 / Ryzen 7 5800X / 32GB RAM',src:'LeBonCoin',cat:'PC & Tech',time:'il y a 1h',achat:'400 €',revente:'~850 €',coeff:'×2.1',gain:'+450 €',score:88,
+    fiche:[['GPU','NVIDIA RTX 3080 10GB'],['CPU','AMD Ryzen 7 5800X'],['RAM','32GB DDR4 3200MHz'],['Stockage','SSD 1To NVMe'],['Alim','750W Gold'],['Boîtier','Tour ATX'],['OS','Windows 11'],['État','Très bon état'],['Stable','Oui, testé'],['Raison vente','Upgrade RTX 4080'],['Prix composants neufs','~1600 €'],['Carte mère','B550']],
+    verdict:'<strong>RTX 3080 seule vaut 350–400€</strong> en occasion. Avec tout le système à 400€, la marge est évidente. Prix recommandé : <strong>820–860€</strong>.',
+    raisons:[['RTX 3080 encore très demandée','En 2024 la 3080 reste une <strong>carte haut de gamme accessible</strong>. Seule = 350–420€.'],['32GB RAM = argument fort','<strong>32GB vs 16GB standard</strong> justifie 50–80€ de plus.'],['Ryzen 7 5800X toujours compétitif','Combo <strong>5800X + RTX 3080</strong> tourne tous les AAA en 1440p.']],
+    marche:[{d:'current',l:'Cette annonce',p:'400 €',n:'LBC · il y a 1h'},{d:'avg',l:'RTX 3080 seule',p:'380 €',n:'eBay · prix moyen'},{d:'avg',l:'PC 3080/5800X similaire',p:'800 €',n:'LBC · vendu il y a 3j'},{d:'rec',l:'Prix recommandé',p:'820–860 €',n:'Estimation IA · < 72h'}],
+    trust:[{i:'✅',t:'<strong>Compte actif depuis 2018</strong>'},{i:'✅',t:'<strong>PC testé et stable</strong>'},{i:'⚠️',t:'<strong>Main propre uniquement</strong>'},{i:'✅',t:'<strong>Raison de vente cohérente</strong>'}],
+    scores:{marge:'Excellent',conf:'Excellent',liv:'Main propre',fraude:'Faible'}},
+  jordan:{img:'👟',title:'Nike Air Jordan 1 Retro High OG "Chicago" — US10',src:'Vinted',cat:'Sneakers',time:'il y a 2h',achat:'170 €',revente:'~270 €',coeff:'×1.6',gain:'+100 €',score:71,
+    fiche:[['Modèle','Air Jordan 1 Retro High OG'],['Coloris','Chicago (Black/Red/White)'],['Taille','US10 / EU44'],['État','Très bon état'],['Port','2 fois'],['Boîte','Originale complète'],['Accessoires','Lacets supplémentaires'],['Année','2023 Restock'],['Semelle','Propre, no yellowing'],['Upper','Aucun crease majeur'],['StockX price','~280 €'],['Goat price','~270 €']],
+    verdict:'Les <strong>Jordan 1 Chicago sont une valeur sûre</strong>. À 170€ avec boîte complète et 2 ports, marge solide. Prix recommandé : <strong>260–280€</strong> sur StockX ou LBC.',
+    raisons:[['Coloris Chicago = valeur permanente','Le Chicago est l\'un des 3 coloris les plus recherchés. <strong>Jamais dévalué</strong>.'],['US10 = taille la plus demandée','Statistiquement <strong>la plus recherchée sur les plateformes resell</strong>.'],['Boîte complète = +20–30€','Les acheteurs sneakers <strong>valorisent fortement la boîte originale</strong>.']],
+    marche:[{d:'current',l:'Cette annonce',p:'170 €',n:'Vinted · il y a 2h'},{d:'avg',l:'Jordan 1 Chicago US10 Vinted',p:'220 €',n:'Vinted · vendu récemment'},{d:'avg',l:'Jordan 1 Chicago StockX',p:'280 €',n:'StockX · prix actuel'},{d:'rec',l:'Prix recommandé',p:'260–280 €',n:'Estimation IA · LBC/Vinted'}],
+    trust:[{i:'✅',t:'<strong>Profil Vinted actif</strong> · Nombreux avis positifs'},{i:'✅',t:'<strong>Photos détaillées</strong> semelle + upper'},{i:'✅',t:'<strong>Boîte originale</strong> visible sur photos'},{i:'✅',t:'<strong>Prix cohérent</strong>'}],
+    scores:{marge:'Correct',conf:'Bon',liv:'Disponible',fraude:'Faible'}}
+};
+
+const searchData=[
+  {icon:'🚵',title:'VTT Trek X-Caliber 7 2020',meta:'Vélo · 140€ → ~380€',key:'velo'},
+  {icon:'🎮',title:'PS5 Standard + bundle',meta:'Gaming · 255€ → ~480€',key:'ps5'},
+  {icon:'💻',title:'PC Gaming RTX 3080',meta:'PC · 400€ → ~850€',key:'pc'},
+  {icon:'👟',title:'Jordan 1 Chicago US10',meta:'Sneakers · 170€ → ~270€',key:'jordan'},
+  {icon:'⚡',title:'VAE Moustache Samedi 27',meta:'Vélo Électrique · 420€ → ~950€',key:'velo'},
+];
+
+// ─── SEARCH ───
+function handleSearch(v){
+  const q=v.toLowerCase().trim(),dd=document.getElementById('searchDD');
+  if(!q){dd.innerHTML='';dd.classList.remove('open');return}
+  const f=searchData.filter(d=>d.title.toLowerCase().includes(q)||d.meta.toLowerCase().includes(q));
+  dd.innerHTML=f.length?f.map(d=>`<div class="sd-item" onclick="openModal('${d.key}');hideSearch()"><div class="sd-icon">${d.icon}</div><div><div class="sd-title">${d.title}</div><div class="sd-meta">${d.meta}</div></div></div>`).join(''):'<div style="padding:12px 14px;font-size:12px;color:var(--muted)">Aucun résultat</div>';
+  dd.classList.add('open');
+}
+function showSearch(){if(document.getElementById('searchInput').value)document.getElementById('searchDD').classList.add('open')}
+function hideSearch(){document.getElementById('searchDD').classList.remove('open')}
+
+// ─── THEME ───
+function toggleTheme(){
+  document.body.classList.toggle('dark');
+  document.getElementById('themeBtn').textContent=document.body.classList.contains('dark')?'☀️':'🌙';
+  if(map)map.invalidateSize();
+}
+
+// ─── TOAST ───
+function showToast(ico,msg){
+  document.getElementById('toastIco').textContent=ico;
+  document.getElementById('toastMsg').textContent=msg;
+  const t=document.getElementById('toast');
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+// ─── OVERLAYS ───
+function openOverlay(id){document.getElementById(id).classList.add('open');document.body.style.overflow='hidden'}
+function closeOverlay(id){document.getElementById(id).classList.remove('open');document.body.style.overflow=''}
+
+// ─── LOGIN ───
+function openLogin(){openOverlay('loginOverlay')}
+function switchLoginTab(el,tab){
+  document.querySelectorAll('.lb-tab').forEach(t=>t.classList.remove('on'));
+  el.classList.add('on');
+  document.getElementById('loginForm').style.display=tab==='login'?'block':'none';
+  document.getElementById('registerForm').style.display=tab==='register'?'block':'none';
+}
+function fakeLogin(){closeOverlay('loginOverlay');showToast('✅','Connexion réussie ! Bienvenue sur Dealbotx.');document.querySelector('.nav-user').textContent='👤 Adrien';}
+function fakeRegister(){closeOverlay('loginOverlay');showToast('🎉','Compte créé ! Bienvenue sur Dealbotx.');}
+
+// ─── ALERTE ───
+function creerAlerte(){
+  const kw=document.getElementById('alerteKw').value;
+  const cat=document.getElementById('alerteCat').value;
+  if(!kw&&!cat){showToast('⚠️','Saisis un mot-clé ou une catégorie.');return}
+  showToast('🔔',`Alerte créée${kw?' pour "'+kw+'"':''}${cat?' · '+cat:''} — Notification Telegram activée !`);
+  document.getElementById('alerteKw').value='';
+}
+
+// ─── FILTRES ───
+function filterMarge(el){document.querySelectorAll('.mpill').forEach(p=>p.classList.remove('active'));el.classList.add('active')}
+function toggleDtog(el){document.querySelectorAll('.dtog').forEach(d=>d.classList.remove('on'));el.classList.add('on')}
+function toggleCi(el){const cb=el.querySelector('.cb');cb.classList.toggle('on');cb.textContent=cb.classList.contains('on')?'✓':''}
+function actSort(el){document.querySelectorAll('.sbtn').forEach(b=>b.classList.remove('on'));el.classList.add('on')}
+
+// ─── CAT DYNAMIQUES ───
+const catFilters={
+  velos:{label:'🚲 Filtres Vélos',sections:[{title:'Type',opts:['VTT','Route','Électrique','BMX','Ville','Gravel']},{title:'Taille',opts:['XS','S','M','L','XL']},{title:'Marque',opts:['Trek','Specialized','Canyon','Giant','Decathlon','Scott','Cube']},{title:'Transmission',opts:['1×11','1×12','2×10','2×11']},{title:'Freins',opts:['Hydrauliques','Mécaniques','V-brake']}]},
+  gaming:{label:'🎮 Filtres Gaming',sections:[{title:'Plateforme',opts:['PS5','PS4','Xbox Series','Xbox One','Switch','PC Gaming']},{title:'Type',opts:['Console','Jeu','Manette','Casque','Accessoire']}]},
+  pc:{label:'💻 Filtres PC',sections:[{title:'Type',opts:['PC Tour','PC Portable','MacBook','iMac','Écran','Composant']},{title:'GPU',opts:['RTX 3060','RTX 3070','RTX 3080','RTX 4070','RTX 4080']},{title:'RAM',opts:['8 GB','16 GB','32 GB','64 GB']},{title:'Stockage',opts:['256 Go','512 Go','1 To','2 To']}]},
+  phones:{label:'📱 Filtres Téléphones',sections:[{title:'Marque',opts:['Apple','Samsung','Xiaomi','OnePlus','Google']},{title:'Stockage',opts:['64 Go','128 Go','256 Go','512 Go']},{title:'État',opts:['Comme neuf','Très bon','Bon état','Correct']}]},
+  tv:{label:'📺 Filtres TV & Audio',sections:[{title:'Taille',opts:['32"','43"','50"','55"','65"','75"+']},{title:'Techno',opts:['OLED','QLED','LED']},{title:'Marque',opts:['Samsung','LG','Sony','Philips']}]},
+  sneakers:{label:'👟 Filtres Sneakers',sections:[{title:'Marque',opts:['Nike','Adidas','Jordan','Yeezy','New Balance','Asics']},{title:'Pointure EU',opts:['38','39','40','41','42','43','44','45','46','47+']},{title:'État',opts:['DS','VNDS','Très bon','Bon état']}]},
+  voitures:{label:'🚗 Filtres Voitures',sections:[{title:'Marque',opts:['Renault','Peugeot','Citroën','VW','BMW','Mercedes','Toyota']},{title:'Carburant',opts:['Essence','Diesel','Hybride','Électrique']},{title:'Année',opts:['<2010','2010–2015','2015–2019','2019–2022','2022+']}]},
+  motos:{label:'🏍️ Filtres Motos',sections:[{title:'Type',opts:['Moto','Scooter','Naked','Trail','Sportive']},{title:'Cylindrée',opts:['50cc','125cc','300–500cc','600cc','750cc+']},{title:'Marque',opts:['Honda','Yamaha','Kawasaki','Suzuki','BMW']}]},
+  sport:{label:'🏋️ Filtres Sport',sections:[{title:'Type',opts:['Musculation','Cardio','Glisse','Collectifs']},{title:'Équipement',opts:['Haltères','Barre + disques','Tapis','Vélo salle']}]},
+  electro:{label:'🧺 Filtres Électroménager',sections:[{title:'Type',opts:['Lave-linge','Réfrigérateur','Lave-vaisselle','Four','Robot cuisine']},{title:'Marque',opts:['Bosch','Samsung','LG','Whirlpool','Miele']}]},
+};
+const activeCats=new Set(['velos','gaming','pc']);
+function toggleCat(el,cat){
+  const cb=el.querySelector('.cb'),was=cb.classList.contains('on');
+  cb.classList.toggle('on');cb.textContent=cb.classList.contains('on')?'✓':'';
+  if(!was){activeCats.add(cat);renderDynFilter(cat)}
+  else{activeCats.delete(cat);const ex=document.getElementById('df_'+cat);if(ex)ex.remove()}
+}
+function renderDynFilter(cat){
+  if(document.getElementById('df_'+cat))return;
+  const d=catFilters[cat];if(!d)return;
+  let h=`<div class="dyn-sec" id="df_${cat}"><div class="dyn-hdr">${d.label}</div>`;
+  d.sections.forEach(s=>{
+    h+=`<div style="padding:7px 11px 4px;border-bottom:1px solid var(--border)"><div style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:4px">${s.title}</div><div class="dyn-opts" style="padding:0">`;
+    s.opts.forEach(o=>{h+=`<span class="dyn-opt" onclick="this.classList.toggle('on')">${o}</span>`});
+    h+=`</div></div>`;
+  });
+  h+=`</div>`;
+  document.getElementById('dynFilters').insertAdjacentHTML('beforeend',h);
+}
+['velos','gaming','pc'].forEach(c=>renderDynFilter(c));
+
+// ─── COMPARATEUR ───
+let cmpItems=[];
+function addCmp(key,title,achat,revente){
+  if(cmpItems.find(i=>i.key===key)){showToast('ℹ️','Produit déjà dans la comparaison.');return}
+  if(cmpItems.length>=3){showToast('⚠️','Maximum 3 produits.');return}
+  cmpItems.push({key,title,achat:parseFloat(achat),revente:parseFloat(revente)});
+  updateCmpBar();
+  showToast('⚖️',`"${title}" ajouté.`);
+}
+function addCmpFromModal(){if(curKey){const d=deals[curKey];if(d)addCmp(curKey,d.title.substring(0,25),parseFloat(d.achat),parseFloat(d.revente))}}
+function updateCmpBar(){
+  for(let i=0;i<3;i++){
+    const s=document.getElementById('cslot'+i);
+    if(cmpItems[i]){s.className='cmp-slot filled';s.innerHTML=`${cmpItems[i].title.substring(0,18)}... <span class="cmp-rm" onclick="rmCmp(${i})">✕</span>`}
+    else{s.className='cmp-slot';s.innerHTML=`Produit ${i+1}`}
+  }
+  document.getElementById('btnCmp').disabled=cmpItems.length<2;
+}
+function rmCmp(i){cmpItems.splice(i,1);updateCmpBar()}
+function openCmp(){
+  if(cmpItems.length<2)return;
+  const rows=[
+    {label:'Produit',vals:cmpItems.map(i=>i.title.substring(0,22)+'...')},
+    {label:"Prix d'achat",vals:cmpItems.map(i=>i.achat+'€'),mono:true},
+    {label:'Revente estimée',vals:cmpItems.map(i=>'~'+i.revente+'€'),mono:true,best:true},
+    {label:'Gain estimé',vals:cmpItems.map(i=>'+'+(i.revente-i.achat)+'€'),mono:true,best:true},
+    {label:'Coefficient',vals:cmpItems.map(i=>'×'+(i.revente/i.achat).toFixed(2)),mono:true,best:true},
+  ];
+  const maxG=Math.max(...cmpItems.map(i=>i.revente-i.achat));
+  let h=`<table style="width:100%;border-collapse:collapse"><thead><tr><th class="lbl" style="padding:11px 14px;background:var(--s2);text-align:left;font-size:11px;color:var(--muted2);border-bottom:1px solid var(--border)">Critère</th>${cmpItems.map((_,i)=>`<th style="padding:11px 14px;background:var(--s2);text-align:left;font-size:11px;color:var(--muted2);border-bottom:1px solid var(--border)">Produit ${i+1}</th>`).join('')}</tr></thead><tbody>`;
+  rows.forEach(row=>{
+    h+=`<tr>`;
+    h+=`<td style="padding:11px 14px;font-size:11px;color:var(--muted2);font-weight:600;border-bottom:1px solid var(--border)">${row.label}</td>`;
+    row.vals.forEach((v,i)=>{
+      const gain=cmpItems[i].revente-cmpItems[i].achat;
+      const isBest=row.best&&gain===maxG;
+      h+=`<td style="padding:11px 14px;font-size:13px;border-bottom:1px solid var(--border);${row.mono?'font-family:DM Mono,monospace;font-weight:500':''}${isBest?';color:var(--green);font-weight:600':''}">${v}</td>`;
+    });
+    h+=`</tr>`;
+  });
+  h+=`</tbody></table>`;
+  document.getElementById('cmpTable').innerHTML=h;
+  openOverlay('cmpOverlay');
+}
+
+// ─── MODAL DÉTAIL ───
+let curKey=null;
+function openModal(key){
+  const d=deals[key];if(!d)return;
+  curKey=key;
+  document.getElementById('mImg').textContent=d.img;
+  document.getElementById('mTitle').textContent=d.title;
+  document.getElementById('mSrc').textContent=d.src;
+  document.getElementById('mCat').textContent=d.cat;
+  document.getElementById('mTime').textContent=d.time;
+  document.getElementById('mAchat').textContent=d.achat;
+  document.getElementById('mRevente').textContent=d.revente;
+  document.getElementById('mCoeff').textContent=d.coeff;
+  document.getElementById('mGain').textContent=d.gain;
+  document.getElementById('mVerdict').innerHTML=d.verdict;
+  // Score
+  const sc=d.score,off=175.9*(1-sc/100);
+  document.getElementById('scoreCircle').style.strokeDashoffset=off;
+  document.getElementById('scoreNum').textContent=sc;
+  document.getElementById('scoreNum').style.color=sc>=80?'var(--red)':sc>=60?'var(--green)':'var(--orange)';
+  document.getElementById('scoreMarge').textContent=d.scores.marge;
+  document.getElementById('scoreConf').textContent=d.scores.conf;
+  document.getElementById('scoreLiv').textContent=d.scores.liv;
+  document.getElementById('scoreFraude').textContent=d.scores.fraude;
+  // Fiche
+  document.getElementById('mFiche').innerHTML=d.fiche.map(([k,v])=>`<div class="fi"><span class="fi-k">${k}</span><span class="fi-v">${v}</span></div>`).join('');
+  // Raisons
+  document.getElementById('mRaisons').innerHTML=d.raisons.map(([t,desc],i)=>`<div class="raison"><div class="r-num">${i+1}</div><div><div class="r-title">${t}</div><div class="r-desc">${desc}</div></div></div>`).join('');
+  // Marché
+  document.getElementById('mMarche').innerHTML=d.marche.map(r=>`<div class="marche-row"><div class="mr-l"><div class="mr-dot ${r.d}"></div>${r.l}</div><div><div class="mr-p ${r.d==='rec'?'rec':r.d==='current'?'current':''}">${r.p}</div><div class="mr-n">${r.n}</div></div></div>`).join('');
+  // Trust
+  document.getElementById('mTrust').innerHTML=`<div style="border:1px solid var(--border);border-radius:7px;overflow:hidden">${d.trust.map(t=>`<div class="trust-item"><span class="ti-ico">${t.i}</span><span class="ti-txt">${t.t}</span></div>`).join('')}</div>`;
+  openOverlay('detailOverlay');
+}
+
+// ─── VENDEUR ───
+function openVendeur(){openOverlay('vendeurOverlay')}
+
+// ─── FAQ ───
+function toggleFaq(el){
+  const item=el.closest('.faq-item');
+  item.classList.toggle('open');
+}
+
+// ─── AFFILIATION ───
+function copyAffil(){
+  navigator.clipboard.writeText(document.getElementById('affilLink').value).then(()=>showToast('📋','Lien copié dans le presse-papier !'));
+}
+
+// ─── DRAWER MOBILE ───
+function openDrawer(){document.getElementById('drawerOverlay').classList.add('open');document.getElementById('drawer').classList.add('open')}
+function closeDrawer(){document.getElementById('drawerOverlay').classList.remove('open');document.getElementById('drawer').classList.remove('open')}
+
+// ─── CHART ───
+function actChartTab(el,t){document.querySelectorAll('.chart-tab').forEach(c=>c.classList.remove('on'));el.classList.add('on');drawChart(t)}
+function drawChart(period){
+  const canvas=document.getElementById('priceChart');
+  const ctx=canvas.getContext('2d');
+  canvas.width=canvas.offsetWidth||600;canvas.height=160;
+  const data7=[290,310,285,320,295,340,370];
+  const data30=[250,260,270,265,280,275,290,300,295,310,305,320,315,310,325,330,320,340,335,345,340,350,345,355,360,355,365,370,365,380];
+  const data90=Array.from({length:90},(_,i)=>220+i*1.8+Math.sin(i*0.3)*15);
+  const pts=period==='7j'?data7:period==='30j'?data30:data90;
+  const min=Math.min(...pts)-20,max=Math.max(...pts)+20;
+  const W=canvas.width,H=canvas.height,pad=20;
+  ctx.clearRect(0,0,W,H);
+  // Grid
+  ctx.strokeStyle='rgba(200,190,180,0.3)';ctx.lineWidth=1;
+  for(let i=0;i<=4;i++){const y=pad+(H-2*pad)*i/4;ctx.beginPath();ctx.moveTo(pad,y);ctx.lineTo(W-pad,y);ctx.stroke()}
+  // Line
+  const grd=ctx.createLinearGradient(0,0,0,H);
+  grd.addColorStop(0,'rgba(176,16,48,0.15)');grd.addColorStop(1,'rgba(176,16,48,0)');
+  ctx.beginPath();
+  pts.forEach((v,i)=>{const x=pad+(W-2*pad)*i/(pts.length-1);const y=H-pad-(v-min)/(max-min)*(H-2*pad);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)});
+  ctx.strokeStyle='var(--red)';ctx.lineWidth=2;ctx.stroke();
+  ctx.lineTo(W-pad,H-pad);ctx.lineTo(pad,H-pad);ctx.closePath();ctx.fillStyle=grd;ctx.fill();
+  // Points
+  ctx.fillStyle='var(--red)';
+  pts.forEach((v,i)=>{if(i%Math.max(1,Math.floor(pts.length/7))===0){const x=pad+(W-2*pad)*i/(pts.length-1);const y=H-pad-(v-min)/(max-min)*(H-2*pad);ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);ctx.fill()}});
+  // Labels
+  ctx.fillStyle='rgba(106,96,88,0.8)';ctx.font='10px DM Mono,monospace';ctx.textAlign='right';
+  [min+20,Math.round((max+min)/2),max-20].forEach((v,i)=>{const y=H-pad-(v-min)/(max-min)*(H-2*pad);ctx.fillText(v+'€',pad-4,y+3)});
+}
+window.addEventListener('load',()=>{setTimeout(()=>drawChart('7j'),100)});
+window.addEventListener('resize',()=>drawChart(document.querySelector('.chart-tab.on')?.textContent||'7j'));
+
+// ─── CARTE LEAFLET ───
+let map=null,circle=null,radius=30;
+function initMap(){
+  if(map)return;
+  map=L.map('leafletMap').setView([45.7640,4.8357],10);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap'}).addTo(map);
+  circle=L.circle([45.7640,4.8357],{radius:radius*1000,color:'var(--red)',fillColor:'rgba(176,16,48,0.08)',fillOpacity:1,weight:2}).addTo(map);
+  // Marqueurs deals
+  const pts=[
+    {lat:45.76,lng:4.84,title:'VTT Trek X-Caliber',prix:'140€',score:92,color:'#b01030'},
+    {lat:45.74,lng:4.82,title:'PC RTX 3080',prix:'400€',score:88,color:'#b01030'},
+    {lat:45.78,lng:4.86,title:'PS5 Bundle',prix:'255€',score:76,color:'#1a8a44'},
+    {lat:45.72,lng:4.80,title:'Jordan 1 Chicago',prix:'170€',score:71,color:'#1a8a44'},
+    {lat:45.77,lng:4.88,title:'VAE Moustache',prix:'420€',score:84,color:'#b01030'},
+  ];
+  pts.forEach(p=>{
+    const icon=L.divIcon({html:`<div style="background:${p.color};color:white;padding:4px 8px;border-radius:4px;font-family:DM Mono,monospace;font-size:10px;font-weight:500;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.2)">${p.prix}</div>`,iconAnchor:[20,14],className:''});
+    L.marker([p.lat,p.lng],{icon}).bindPopup(`<b>${p.title}</b><br>Prix : ${p.prix}<br>Score : ${p.score}/100`).addTo(map);
+  });
+}
+function updateRadius(v){radius=parseInt(v);document.getElementById('mapRangeVal').textContent=v+' km';if(circle)circle.setRadius(v*1000)}
+function centerMap(){if(map&&circle){map.setView([45.7640,4.8357],10);showToast('📍','Zone mise à jour : Lyon + '+radius+'km')}}
+// Init map quand visible
+const mapObs=new IntersectionObserver(entries=>{if(entries[0].isIntersecting){initMap();mapObs.disconnect()}},{threshold:0.1});
+mapObs.observe(document.getElementById('leafletMap'));
+
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){['loginOverlay','detailOverlay','vendeurOverlay','cmpOverlay'].forEach(id=>closeOverlay(id));closeDrawer()}});
+</script>
+</body>
+</html>
